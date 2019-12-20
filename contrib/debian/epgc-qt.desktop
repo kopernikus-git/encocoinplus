@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=EPGC Core
+Comment=EPGC P2P Cryptocurrency
+Comment[fr]=EPGC, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=EPGC, eşten eşe kriptografik sanal para birimi
+Exec=epgc-qt %u
+Terminal=false
+Type=Application
+Icon=epgc128
+MimeType=x-scheme-handler/epgc;
+Categories=Office;Finance;
+StartupWMClass=Epgc-qt

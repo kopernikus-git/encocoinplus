@@ -1,0 +1,8 @@
+/usr/bin/epgc-cli		--	gen_context(system_u:object_r:epgc_exec_t,s0)
+/usr/sbin/epgcd		--	gen_context(system_u:object_r:epgc_exec_t,s0)
+/usr/lib(64)?/epgc/epgcd		--	gen_context(system_u:object_r:epgc_exec_t,s0)
+
+/etc/epgc(/.*)?		gen_context(system_u:object_r:epgc_conf_t,s0)
+/var/lib/epgc(/.*)?		gen_context(system_u:object_r:epgc_var_lib_t,s0)
+
+(/var)?/run/epgcd(/.*)?   gen_context(system_u:object_r:epgc_var_run_t,s0)

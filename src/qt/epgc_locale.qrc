@@ -1,0 +1,37 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/translations">
+        <file alias="bg">locale/epgc_bg.qm</file>
+        <file alias="ca">locale/epgc_ca.qm</file>
+        <file alias="cs">locale/epgc_cs.qm</file>
+        <file alias="da">locale/epgc_da.qm</file>
+        <file alias="de">locale/epgc_de.qm</file>
+        <file alias="en">locale/epgc_en.qm</file>
+        <file alias="en_GB">locale/epgc_en_GB.qm</file>
+        <file alias="en_US">locale/epgc_en_US.qm</file>
+        <file alias="eo">locale/epgc_eo.qm</file>
+        <file alias="es">locale/epgc_es.qm</file>
+        <file alias="es_ES">locale/epgc_es_ES.qm</file>
+        <file alias="fi">locale/epgc_fi.qm</file>
+        <file alias="fr_FR">locale/epgc_fr_FR.qm</file>
+        <file alias="hi_IN">locale/epgc_hi_IN.qm</file>
+        <file alias="hr">locale/epgc_hr.qm</file>
+        <file alias="hr_HR">locale/epgc_hr_HR.qm</file>
+        <file alias="it">locale/epgc_it.qm</file>
+        <file alias="ja">locale/epgc_ja.qm</file>
+        <file alias="ko_KR">locale/epgc_ko_KR.qm</file>
+        <file alias="lt_LT">locale/epgc_lt_LT.qm</file>
+        <file alias="nl">locale/epgc_nl.qm</file>
+        <file alias="pl">locale/epgc_pl.qm</file>
+        <file alias="pt">locale/epgc_pt.qm</file>
+        <file alias="pt_BR">locale/epgc_pt_BR.qm</file>
+        <file alias="ro_RO">locale/epgc_ro_RO.qm</file>
+        <file alias="ru">locale/epgc_ru.qm</file>
+        <file alias="sk">locale/epgc_sk.qm</file>
+        <file alias="sv">locale/epgc_sv.qm</file>
+        <file alias="tr">locale/epgc_tr.qm</file>
+        <file alias="uk">locale/epgc_uk.qm</file>
+        <file alias="vi">locale/epgc_vi.qm</file>
+        <file alias="zh_CN">locale/epgc_zh_CN.qm</file>
+        <file alias="zh_TW">locale/epgc_zh_TW.qm</file>
+    </qresource>
+</RCC>

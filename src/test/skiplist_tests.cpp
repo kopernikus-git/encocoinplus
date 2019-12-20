@@ -5,7 +5,7 @@
 
 #include "main.h"
 #include "util.h"
-#include "test/test_pivx.h"
+#include "test/test_epgc.h"
 
 #include <vector>
 

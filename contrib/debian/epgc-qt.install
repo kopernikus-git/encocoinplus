@@ -1,0 +1,6 @@
+usr/local/bin/epgc-qt usr/bin
+share/pixmaps/epgc32.xpm usr/share/pixmaps
+share/pixmaps/epgc16.xpm usr/share/pixmaps
+share/pixmaps/epgc128.png usr/share/pixmaps
+debian/epgc-qt.desktop usr/share/applications
+debian/epgc-qt.protocol usr/share/kde4/services/
