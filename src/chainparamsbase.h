@@ -11,7 +11,7 @@
 
 /**
  * CBaseChainParams defines the base parameters (shared between epgc-cli and epgcd)
- * of a given instance of the Epgc system.
+ * of a given instance of the EncocoinPlus system.
  */
 class CBaseChainParams
 {

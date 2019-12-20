@@ -16,8 +16,8 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Epgc"
-            VALUE "FileDescription",    "Epgc-cli (OSS RPC client for Epgc)"
+            VALUE "CompanyName",        "EncocoinPlus"
+            VALUE "FileDescription",    "Epgc-cli (OSS RPC client for EncocoinPlus)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "epgc-cli"
             VALUE "LegalCopyright",     COPYRIGHT_STR
