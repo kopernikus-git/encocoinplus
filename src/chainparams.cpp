@@ -161,8 +161,8 @@ public:
         nRejectBlockOutdatedMajority = 10260; // 95%
         nToCheckBlockUpgradeMajority = 10800; // Approximate expected amount of blocks in 7 days (1440*7.5)
         nMinerThreads = 0;
-        nTargetSpacing = 1 * 60;                        // 1 minute
-        nTargetTimespan = 40 * 60;                      // 40 minutes
+        nTargetSpacing = 2 * 60;                        // 1 minute
+        nTargetTimespan = 6 * 60;                      // 6 minutes
         nTimeSlotLength = 15;                           // 15 seconds
         nTargetTimespan_V2 = 2 * nTimeSlotLength * 60;  // 30 minutes
         nMaturity = 100;
@@ -294,6 +294,37 @@ public:
         nProposalEstablishmentTime = 60 * 60 * 24; // Proposals must be at least a day old to make it into a budget
     }
 
+    CAmount GetRequiredMasternodeCollateral(int nTargetHeight) const
+    {
+        if(nTargetHeight > 10000  ) {
+            return 450;
+        }
+
+        return 250;
+    }
+    
+    CAmount StakingMinInput(int nTargetHeight) const
+    {
+        if(nTargetHeight < 10000) {
+            return 0 * COIN;
+        }
+        else if (nTargetHeight < 20000) {
+            return 10 * COIN;
+        }
+        else if (nTargetHeight < 40000) {
+            return 15 * COIN;
+        }
+        else if (nTargetHeight < 60000) {
+            return 30 * COIN;
+        }
+        else if (nTargetHeight < 100000) {
+            return 40 * COIN;
+        }
+        else {
+            return 50 * COIN;
+        }
+    }
+
     const Checkpoints::CCheckpointData& Checkpoints() const
     {
         return data;
@@ -370,7 +401,7 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 139); // Testnet epgc addresses start with 'x' or 'y'
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 38); // Testnet epgc addresses start with 'x' or 'y'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 19);  // Testnet epgc script addresses start with '8' or '9'
         base58Prefixes[STAKING_ADDRESS] = std::vector<unsigned char>(1, 73);     // starting with 'W'
         base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 239);     // Testnet private keys start with '9' or 'c' (Bitcoin defaults)
@@ -401,6 +432,25 @@ public:
 
         nProposalEstablishmentTime = 60 * 5; // Proposals must be at least 5 mns old to make it into a test budget
     }
+
+    CAmount GetRequiredMasternodeCollateral(int nTargetHeight) const
+    {
+        if(nTargetHeight > 10000) {
+            return 450;
+        }
+
+        return 250;
+    }
+    
+    CAmount StakingMinInput(int nTargetHeight) const
+    {
+        if(nTargetHeight > 2000) {
+            return 30 * COIN;
+        }
+        
+        return 0;
+    }
+    
     const Checkpoints::CCheckpointData& Checkpoints() const
     {
         return dataTestnet;

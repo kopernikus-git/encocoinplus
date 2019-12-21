@@ -293,7 +293,7 @@ public:
     bool IsValidNetAddr();
 
     /// Is the input associated with collateral public key? (and there is 10000 EPG - checking if valid masternode)
-    bool IsInputAssociatedWithPubkey() const;
+    bool IsInputAssociatedWithPubkey(int nTargetHeight) const;
 };
 
 

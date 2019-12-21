@@ -83,14 +83,14 @@ bool CMasternodeConfig::read(std::string& strErr)
         }
 
         if (Params().NetworkID() == CBaseChainParams::MAIN) {
-            if (port != 29442) {
+            if (port != Params().GetDefaultPort()) {
                 strErr = _("Invalid port detected in masternode.conf") + "\n" +
                          strprintf(_("Line: %d"), linenumber) + "\n\"" + line + "\"" + "\n" +
                          _("(must be 29442 for mainnet)");
                 streamConfig.close();
                 return false;
             }
-        } else if (port == 29442) {
+        } else if (port ==  Params(CBaseChainParams::MAIN).GetDefaultPort()) {
             strErr = _("Invalid port detected in masternode.conf") + "\n" +
                      strprintf(_("Line: %d"), linenumber) + "\n\"" + line + "\"" + "\n" +
                      _("(29442 could be used only on mainnet)");
