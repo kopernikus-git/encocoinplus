@@ -4242,7 +4242,7 @@ bu sayede EPGC sahipleri blok ödülü kazanımına katılabilmektedir
                            zEPG is an optional privacy-centric method of coin mixing on the
                            EPGC blockchain. Basically all your transactions cannot be tracked
                            on to any block explorer. You can read more about the technicals in the
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt;
                            "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </source>
@@ -4252,7 +4252,7 @@ bu sayede EPGC sahipleri blok ödülü kazanımına katılabilmektedir
 gizlilik-odaklı opsiyonel bir metoddur. Temel olarak işlemleriniz
  hiçbir tarayıcı tarafından takip edilemez. Teknik detayları
  hakkında daha çok bilgi almak için
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt;
                            "EPGC Zerocoin (zEPG) Teknik Makalesi"&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </translation>
@@ -4302,7 +4302,7 @@ gizlilik-odaklı opsiyonel bir metoddur. Temel olarak işlemleriniz
                            marks and restart your wallet to disable automint.&lt;/p&gt;
                            &lt;/p&gt;&lt;p align="justify"&gt;
                            You can read more about zEPG in the
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt; "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
+                           &lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt; "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
                            If you would like to keep and stake your zEPG, please read the "How do I stake"
                            section of the FAQ below.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
@@ -4312,7 +4312,7 @@ gizlilik-odaklı opsiyonel bir metoddur. Temel olarak işlemleriniz
                            EPGC cüzdanınız ağa destek olmak için varsayılan olarak tüm EPG bakiyenizin 10% 'unu zEPG'e dönüştürecektir. Getirdiği gizlilik avantajını istemiyor veya zEPG stakelemek istemiyorsanız cüzdanınızın otomint özelliğini Ayarlar-&gt;Seçenekler içindeki “zEPG Otomint etkin” seçeneğini değiştirerek devredışı bırakabilirsiniz. EPGCQT veya GUI kullanmıyorsanız, epgc.conf dosyası içine  &lt;i&gt;enablezeromint=0&lt;/i&gt; ifadesini tırnak işareti olmadan girerek devredışı bırakabilirsiniz. &lt;/p&gt;
                            &lt;/p&gt;&lt;p align="justify"&gt;
                            Teknik detayları hakkında daha çok bilgi almak için
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt; "EPGC Zerocoin (zEPG) Teknik Makalesi"&lt;/a&gt;.
+                           &lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt; "EPGC Zerocoin (zEPG) Teknik Makalesi"&lt;/a&gt;.
                            zEPG'lerinizi tutmak ve stakelemek istiyorsanız, lütfen SSS kısmındaki "Nasıl Stake yaparım"
 kısmını okuyunuz.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
@@ -4423,20 +4423,20 @@ zEPG Protokolü ile anonimleştirilmiş olacaktır.
         <source>
                            &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align="justify"&gt;
                            We have support channels in most of our official chat groups, for example
-                           &lt;a style='color: #b088ff' href='https://Discord.EPGC.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://Discord.EPGC.com'&gt;
                            #support in our Discord&lt;/a&gt;.
                            If you prefer to submit a ticket, One can be
-                           &lt;a style='color: #b088ff' href='https://EPGC.FreshDesk.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.FreshDesk.com'&gt;
                            our Freshdesk support site&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </source>
         <translation>
                            &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align="justify"&gt;
                            Resmi chat gruplarımızın çoğunun içinde destek kanalları bulunmaktadır, örneğin
-                           &lt;a style='color: #b088ff' href='https://Discord.EPGC.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://Discord.EPGC.com'&gt;
                            Discord içinnde #support &lt;/a&gt;.
                            Bir destek talebi açmak isterseniz,bunu
-                           &lt;a style='color: #b088ff' href='https://EPGC.FreshDesk.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.FreshDesk.com'&gt;
                            Freshdesk destek sitesinden yapabilirsiniz&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </translation>

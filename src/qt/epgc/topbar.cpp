@@ -51,6 +51,13 @@ TopBar::TopBar(EPGCGUI* _mainWindow, QWidget *parent) :
     setCssProperty({ui->labelAmountEpg, ui->labelAmountzEpg}, "amount-topbar");
     setCssProperty({ui->labelPendingEpg, ui->labelPendingzEpg, ui->labelImmatureEpg, ui->labelImmaturezEpg}, "amount-small-topbar");
 
+    ui->labelTitle2->setVisible(false);
+    ui->labelTitle5->setVisible(false);
+    ui->labelTitle6->setVisible(false);
+    ui->labelAmountTopzEpg->setVisible(false);
+    ui->labelAmountzEpg->setVisible(false);
+    ui->labelPendingzEpg->setVisible(false);
+
     // Progress Sync
     progressBar = new QProgressBar(ui->layoutSync);
     progressBar->setRange(1, 10);
@@ -547,24 +554,24 @@ void TopBar::updateBalances(const CAmount& balance, const CAmount& unconfirmedBa
     CAmount epgAvailableBalance = balance + delegatedBalance - nLockedBalance;
 
     // zEPG Balance
-    CAmount matureZerocoinBalance = zerocoinBalance - unconfirmedZerocoinBalance - immatureZerocoinBalance;
+    //CAmount matureZerocoinBalance = zerocoinBalance - unconfirmedZerocoinBalance - immatureZerocoinBalance;
 
     // Set
     QString totalEpg = GUIUtil::formatBalance(epgAvailableBalance, nDisplayUnit);
-    QString totalzEpg = GUIUtil::formatBalance(matureZerocoinBalance, nDisplayUnit, true);
+    //QString totalzEpg = GUIUtil::formatBalance(matureZerocoinBalance, nDisplayUnit, true);
     // Top
     ui->labelAmountTopEpg->setText(totalEpg);
-    ui->labelAmountTopzEpg->setText(totalzEpg);
+    //ui->labelAmountTopzEpg->setText(totalzEpg);
 
     // Expanded
     ui->labelAmountEpg->setText(totalEpg);
-    ui->labelAmountzEpg->setText(totalzEpg);
+    //ui->labelAmountzEpg->setText(totalzEpg);
 
     ui->labelPendingEpg->setText(GUIUtil::formatBalance(unconfirmedBalance, nDisplayUnit));
-    ui->labelPendingzEpg->setText(GUIUtil::formatBalance(unconfirmedZerocoinBalance, nDisplayUnit, true));
+    //ui->labelPendingzEpg->setText(GUIUtil::formatBalance(unconfirmedZerocoinBalance, nDisplayUnit, true));
 
     ui->labelImmatureEpg->setText(GUIUtil::formatBalance(immatureBalance, nDisplayUnit));
-    ui->labelImmaturezEpg->setText(GUIUtil::formatBalance(immatureZerocoinBalance, nDisplayUnit, true));
+   // ui->labelImmaturezEpg->setText(GUIUtil::formatBalance(immatureZerocoinBalance, nDisplayUnit, true));
 }
 
 void TopBar::resizeEvent(QResizeEvent *event){

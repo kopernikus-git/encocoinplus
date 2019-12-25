@@ -54,6 +54,7 @@ static void convertSeed6(std::vector<CAddress>& vSeedsOut, const SeedSpec6* data
 static Checkpoints::MapCheckpoints mapCheckpoints =
     boost::assign::map_list_of
     (0, uint256("0x00000ec95644c720b0d42b9c2206fb75f6e9c14418e5b6b66f3365d189238efb"))
+    (1, uint256("0x000004b9c6ea3f605e193587a905bd495d41ee6ac33ecc91a83ecaa724ce3a26"))
     ; 
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
@@ -102,15 +103,12 @@ libzerocoin::ZerocoinParams* CChainParams::Zerocoin_Params(bool useModulusV1) co
 bool CChainParams::HasStakeMinAgeOrDepth(const int contextHeight, const uint32_t contextTime,
         const int utxoFromBlockHeight, const uint32_t utxoFromBlockTime) const
 {
-/*
-    // before stake modifier V2, the age required was 60 * 60 (1 hour). Not required for regtest
-    if (!IsStakeModifierV2(contextHeight))
-        return NetworkID() == CBaseChainParams::REGTEST || (utxoFromBlockTime + nStakeMinAge <= contextTime);
-
-    // after stake modifier V2, we require the utxo to be nStakeMinDepth deep in the chain
+    bool StakeMinAgOk = (utxoFromBlockTime + nStakeMinAge <= contextTime);
+    
+    if (!StakeMinAgOk)
+        return false;
+    
     return (contextHeight - utxoFromBlockHeight >= nStakeMinDepth);
-*/
-   return NetworkID() == CBaseChainParams::REGTEST || (utxoFromBlockTime + nStakeMinAge <= contextTime);
 }
 
 int CChainParams::FutureBlockTimeDrift(const int nHeight) const
@@ -190,7 +188,7 @@ public:
         nBlockFirstFraudulent = 999999999; //First block that bad serials emerged
         nBlockLastGoodCheckpoint = 999999999; //Last valid accumulator checkpoint
         nBlockEnforceInvalidUTXO = 999999999; //Start enforcing the invalid UTXO's
-        nInvalidAmountFiltered = 0*COIN; //Amount of invalid coins filtered through exchanges, that should be considered valid
+        nInvalidAmountFiltered = 0; //Amount of invalid coins filtered through exchanges, that should be considered valid
         nBlockZerocoinV2 = 999999999; //!> The block that zerocoin v2 becomes active - roughly Tuesday, May 8, 2018 4:00:00 AM GMT
         nBlockDoubleAccumulated = 999999999;
         nEnforceNewSporkKey = 1576364812; //!> Sporks signed after Monday, August 26, 2019 11:00:00 PM GMT must use the new spork key
@@ -198,7 +196,7 @@ public:
         nBlockStakeModifierlV2 = 1200;
         nBIP65ActivationHeight = 0;
         // Activation height for TimeProtocolV2, Blocks V7 and newMessageSignatures
-        nBlockTimeProtocolV2 = 0;
+        nBlockTimeProtocolV2 = 1250;
 
         // Public coin spend enforcement
         nPublicZCSpends = 0;
@@ -212,8 +210,7 @@ public:
 
         // Fake Serial Attack
         nFakeSerialBlockheightEnd = -1;
-        nSupplyBeforeFakeSerial = 0 * COIN;   // zerocoin supply at block nFakeSerialBlockheightEnd
-
+        nSupplyBeforeFakeSerial = 0;
         /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot
          * be spent as it did not originally exist in the database.
@@ -269,9 +266,9 @@ public:
 
         nPoolMaxTransactions = 3;
         nBudgetCycleBlocks = 43200; //!< Amount of blocks in a months period of time (using 1 minutes per) = (60*24*30)
-        strSporkPubKey = "040F129DE6546FE405995329A887329BED4321325B1A73B0A257423C05C1FCFE9E40EF0678AEF59036A22C42E61DFD29DF7EFB09F56CC73CADF64E05741880E3E7";
-        strSporkPubKeyOld = "0499A7AF4806FC6DE640D23BC5936C29B77ADF2174B4F45492727F897AE63CF8D27B2F05040606E0D14B547916379FA10716E344E745F880EDC037307186AA25B7";
-        strObfuscationPoolDummyAddress = "D87q2gC9j6nNrnzCsg4aY6bHMLsT9nUhEw";
+        strSporkPubKey = "04410cf61ab8bdf2f3bb39c361312bb60f549135232b00085736fa2905f73e60216c32edce58a1916c2af49a5665d69a875217a39d30bd20855e84eaf587e92e17";
+        strSporkPubKeyOld = "04410cf61ab8bdf2f3bb39c361312bb60f549135232b00085736fa2905f73e60216c32edce58a1916c2af49a5665d69a875217a39d30bd20855e84eaf587e92e17";
+        strObfuscationPoolDummyAddress = "7GSKHnPBTu6V3S89qwvA3rb95BMYgKCi9X";
         nStartMasternodePayments = 1576364812; //genises
 
         /** Zerocoin */
@@ -294,7 +291,7 @@ public:
         nProposalEstablishmentTime = 60 * 60 * 24; // Proposals must be at least a day old to make it into a budget
     }
 
-    CAmount GetRequiredMasternodeCollateral(int nTargetHeight) const
+    int GetRequiredMasternodeCollateral(int nTargetHeight) const
     {
         if(nTargetHeight > 10000  ) {
             return 450;
@@ -433,7 +430,7 @@ public:
         nProposalEstablishmentTime = 60 * 5; // Proposals must be at least 5 mns old to make it into a test budget
     }
 
-    CAmount GetRequiredMasternodeCollateral(int nTargetHeight) const
+    int GetRequiredMasternodeCollateral(int nTargetHeight) const
     {
         if(nTargetHeight > 10000) {
             return 450;

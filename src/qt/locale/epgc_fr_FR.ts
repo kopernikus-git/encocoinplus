@@ -4079,14 +4079,14 @@ pour voir votre solde de monnaie dépensable sur le réseau.
                            zEPG is an optional privacy-centric method of coin mixing on the
                            EPGC blockchain. Basically all your transactions cannot be tracked
                            on to any block explorer. You can read more about the technicals in the
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt;
                            "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </source>
         <translation>
 &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align="justify"&gt;
 zEPG est une méthode optionnelle de fongibilité des pièces sur la blockchain EPGC, axée sur la confidentialité. Basiquement, cela permet rendre vos transactions intraçables par les explorateurs de blocs. Vous pouvez en savoir plus sur les aspects techniques en consultant le document
-&lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt;
+&lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt;
  "EPGC Zerocoin (zEPG) Technical Paper".&lt;/a&gt;
 &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
 </translation>
@@ -4136,7 +4136,7 @@ mon solde en zEPG?</translation>
                            marks and restart your wallet to disable automint.&lt;/p&gt;
                            &lt;/p&gt;&lt;p align="justify"&gt;
                            You can read more about zEPG in the
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt; "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
+                           &lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt; "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
                            If you would like to keep and stake your zEPG, please read the "How do I stake"
                            section of the FAQ below.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
@@ -4152,7 +4152,7 @@ votre fichier epgc.conf et ajouter &lt;i&gt; enablezeromint=0&lt;/i&gt; sans gui
 et redémarrer votre portefeuille.&lt;/p&gt;
 &lt;/p&gt;&lt;p align="justify"&gt;
 Vous pouvez en savoir plus sur zEPG dans
-&lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt; le document "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
+&lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt; le document "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
 Si vous voulez conserver et mettre en jeu vos zEPG, veuillez lire la section "Comment staker"
 de la FAQ ci-dessous.
 &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
@@ -4261,20 +4261,20 @@ Le staking devrait maintenant être actif.
         <source>
                            &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align="justify"&gt;
                            We have support channels in most of our official chat groups, for example
-                           &lt;a style='color: #b088ff' href='https://Discord.EPGC.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://Discord.EPGC.com'&gt;
                            #support in our Discord&lt;/a&gt;.
                            If you prefer to submit a ticket, One can be
-                           &lt;a style='color: #b088ff' href='https://EPGC.FreshDesk.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.FreshDesk.com'&gt;
                            our Freshdesk support site&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </source>
         <translation>
 &lt;html&gt;&lt;head/&gt;&lt;body&gt;
 Nous avons des services de support dans la plupart de nos groupes de discussion officiels, tel que
-&lt;a style='color: #b088ff' href='https://Discord.EPGC.com'&gt;
+&lt;a style='color: #fafa84' href='https://Discord.EPGC.com'&gt;
  #support dans notre groupe Discord&lt;/a&gt;.
 Si vous préférez soumettre un ticket, utilisez
-&lt;a style='color: #b088ff' href='https://EPGC.FreshDesk.com'&gt;
+&lt;a style='color: #fafa84' href='https://EPGC.FreshDesk.com'&gt;
 notre site support Freshdesk&lt;/a&gt;.
 &lt;p align="justify"&gt;&lt;/body&gt;&lt;/html&gt;
 </translation>

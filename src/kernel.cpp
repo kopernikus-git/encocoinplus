@@ -291,6 +291,10 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, const unsigned int nBit
     }
 
     const CAmount& nValueIn = stake->GetValue();
+
+    if (Params().StakingMinInput(pindexPrev->nHeight + 1) > nValueIn)
+        return error("%s : Failed to check coinstake min amount", __func__);
+
     const CDataStream& ssUniqueID = stake->GetUniqueness();
 
     // Base target

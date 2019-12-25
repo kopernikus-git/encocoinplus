@@ -46,7 +46,7 @@ DashboardWidget::DashboardWidget(EPGCGUI* parent) :
     ui->right->setContentsMargins(20,20,20,0);
 
     // Title
-    ui->labelTitle2->setText(tr("Staking Rewards"));
+    ui->labelTitle2->setText(tr("Staking & Masternode Rewards"));
     setCssTitleScreen(ui->labelTitle);
     setCssTitleScreen(ui->labelTitle2);
 
@@ -55,12 +55,12 @@ DashboardWidget::DashboardWidget(EPGCGUI* parent) :
     setCssSubtitleScreen(ui->labelSubtitle);
 
     // Staking Information
-    ui->labelMessage->setText(tr("Amount of EPG and zEPG staked."));
+    ui->labelMessage->setText(tr("Amount of EPG staked and/or generated from Masternodes."));
     setCssSubtitleScreen(ui->labelMessage);
     setCssProperty(ui->labelSquareEpg, "square-chart-epg");
-    setCssProperty(ui->labelSquarezEpg, "square-chart-zepg");
+    setCssProperty(ui->labelSquareMNRewards, "square-chart-mnrewards");
     setCssProperty(ui->labelEpg, "text-chart-epg");
-    setCssProperty(ui->labelZepg, "text-chart-zepg");
+    setCssProperty(ui->labelMNRewards, "text-chart-mnrewards");
 
     // Staking Amount
     QFont fontBold;
@@ -68,10 +68,10 @@ DashboardWidget::DashboardWidget(EPGCGUI* parent) :
 
     setCssProperty(ui->labelChart, "legend-chart");
 
-    ui->labelAmountZepg->setText("0 zEPG");
+    ui->labelAmountMNRewards->setText("0 EPG");
     ui->labelAmountEpg->setText("0 EPG");
     setCssProperty(ui->labelAmountEpg, "text-stake-epg-disable");
-    setCssProperty(ui->labelAmountZepg, "text-stake-zepg-disable");
+    setCssProperty(ui->labelAmountMNRewards, "text-stake-mnrewards-disable");
 
     setCssProperty({ui->pushButtonAll,  ui->pushButtonMonth, ui->pushButtonYear}, "btn-check-time");
     setCssProperty({ui->comboBoxMonths,  ui->comboBoxYears}, "btn-combo-chart-selected");
@@ -140,7 +140,7 @@ DashboardWidget::DashboardWidget(EPGCGUI* parent) :
     setCssProperty(ui->chartContainer, "container-chart");
     setCssProperty(ui->pushImgEmptyChart, "img-empty-staking-on");
 
-    ui->btnHowTo->setText(tr("How to get EPG or zEPG"));
+    ui->btnHowTo->setText(tr("How to get EPG"));
     setCssBtnSecondary(ui->btnHowTo);
 
 
@@ -168,7 +168,7 @@ bool hasCharts = false;
 #endif
 
     if (hasCharts) {
-        ui->labelEmptyChart->setText(tr("You have no staking rewards"));
+        ui->labelEmptyChart->setText(tr("You have no rewards"));
     } else {
         ui->labelEmptyChart->setText(tr("No charts library"));
     }
@@ -182,6 +182,7 @@ void DashboardWidget::handleTransactionClicked(const QModelIndex &index){
     window->showHide(true);
     TxDetailDialog *dialog = new TxDetailDialog(window, false);
     dialog->setData(walletModel, rIndex);
+    dialog->adjustSize();
     openDialogWithOpaqueBackgroundY(dialog, window, 3, 17);
 
     // Back to regular status
@@ -227,7 +228,7 @@ void DashboardWidget::loadWalletModel(){
         stakesFilter->setSortCaseSensitivity(Qt::CaseInsensitive);
         stakesFilter->setFilterCaseSensitivity(Qt::CaseInsensitive);
         stakesFilter->setSortRole(Qt::EditRole);
-        stakesFilter->setOnlyStakes(true);
+        stakesFilter->setOnlyStakesandMNTxes(true);
         stakesFilter->setSourceModel(txModel);
         stakesFilter->sort(TransactionTableModel::Date, Qt::AscendingOrder);
         hasStakes = stakesFilter->rowCount() > 0;
@@ -448,7 +449,7 @@ void DashboardWidget::changeChartColors(){
     }else{
         gridY = QColor("#40ffffff");
         axisY->setGridLineColor(gridY);
-        gridLineColorX = QColor(15,11,22);
+        gridLineColorX = QColor(18, 18, 9);
         linePenColorY =  gridLineColorX;
         backgroundColor = linePenColorY;
     }
@@ -505,8 +506,8 @@ const QMap<int, std::pair<qint64, qint64>> DashboardWidget::getAmountBy() {
         QModelIndex modelIndex = stakesFilter->index(i, TransactionTableModel::ToAddress);
         qint64 amount = llabs(modelIndex.data(TransactionTableModel::AmountRole).toLongLong());
         QDate date = modelIndex.data(TransactionTableModel::DateRole).toDateTime().date();
-        bool isEpg = modelIndex.data(TransactionTableModel::TypeRole).toInt() != TransactionRecord::StakeZEPG;
-
+        bool isEpg = modelIndex.data(TransactionTableModel::TypeRole).toInt() != TransactionRecord::StakeZEPG && modelIndex.data(TransactionTableModel::TypeRole).toInt() != TransactionRecord::MNReward;
+        bool isMN = modelIndex.data(TransactionTableModel::TypeRole).toInt() == TransactionRecord::MNReward;
         int time = 0;
         switch (chartShow) {
             case YEAR: {
@@ -528,14 +529,18 @@ const QMap<int, std::pair<qint64, qint64>> DashboardWidget::getAmountBy() {
         if (amountBy.contains(time)) {
             if (isEpg) {
                 amountBy[time].first += amount;
-            } else
+            }
+            else if (isMN){
                 amountBy[time].second += amount;
+                hasMNRewards = true;
+
+            }
         } else {
             if (isEpg) {
                 amountBy[time] = std::make_pair(amount, 0);
             } else {
                 amountBy[time] = std::make_pair(0, amount);
-                hasZepgStakes = true;
+                hasMNRewards = true;
             }
         }
     }
@@ -564,21 +569,21 @@ bool DashboardWidget::loadChartData(bool withMonthNames) {
     for (int j = range.first; j < range.second; j++) {
         int num = (isOrderedByMonth && j > daysInMonth) ? (j % daysInMonth) : j;
         qreal epg = 0;
-        qreal zepg = 0;
+        qreal mnrewards = 0;
         if (chartData->amountsByCache.contains(num)) {
             std::pair <qint64, qint64> pair = chartData->amountsByCache[num];
             epg = (pair.first != 0) ? pair.first / 100000000 : 0;
-            zepg = (pair.second != 0) ? pair.second / 100000000 : 0;
+            mnrewards = (pair.second != 0) ? pair.second / 100000000 : 0;
             chartData->totalEpg += pair.first;
-            chartData->totalZepg += pair.second;
+            chartData->totalMNRewards += pair.second;
         }
 
         chartData->xLabels << ((withMonthNames) ? monthsNames[num - 1] : QString::number(num));
 
         chartData->valuesEpg.append(epg);
-        chartData->valueszEpg.append(zepg);
+        chartData->valuesMNRewards.append(mnrewards);
 
-        int max = std::max(epg, zepg);
+        int max = std::max(epg, mnrewards);
         if (max > chartData->maxValue) {
             chartData->maxValue = max;
         }
@@ -632,9 +637,9 @@ void DashboardWidget::onChartRefreshed() {
     }
     // init sets
     set0 = new QBarSet("EPG");
-    set1 = new QBarSet("zEPG");
-    set0->setColor(QColor(92,75,125));
-    set1->setColor(QColor(176,136,255));
+    set1 = new QBarSet("EPG MN");
+    set0->setColor(QColor(128, 127, 77));
+    set1->setColor(QColor(255, 253, 135));
 
     if(!series) {
         series = new QBarSeries();
@@ -644,23 +649,23 @@ void DashboardWidget::onChartRefreshed() {
     series->attachAxis(axisY);
 
     set0->append(chartData->valuesEpg);
-    set1->append(chartData->valueszEpg);
+    set1->append(chartData->valuesMNRewards);
 
     // Total
     nDisplayUnit = walletModel->getOptionsModel()->getDisplayUnit();
-    if (chartData->totalEpg > 0 || chartData->totalZepg > 0) {
+    if (chartData->totalEpg > 0 || chartData->totalMNRewards > 0) {
         setCssProperty(ui->labelAmountEpg, "text-stake-epg");
-        setCssProperty(ui->labelAmountZepg, "text-stake-zepg");
+        setCssProperty(ui->labelAmountMNRewards, "text-mnrewards-mnrepg");
     } else {
         setCssProperty(ui->labelAmountEpg, "text-stake-epg-disable");
-        setCssProperty(ui->labelAmountZepg, "text-stake-zepg-disable");
+        setCssProperty(ui->labelAmountMNRewards, "text-stake-mnrewards-disable");
     }
-    forceUpdateStyle({ui->labelAmountEpg, ui->labelAmountZepg});
+    forceUpdateStyle({ui->labelAmountEpg, ui->labelAmountMNRewards});
     ui->labelAmountEpg->setText(GUIUtil::formatBalance(chartData->totalEpg, nDisplayUnit));
-    ui->labelAmountZepg->setText(GUIUtil::formatBalance(chartData->totalZepg, nDisplayUnit, true));
+    ui->labelAmountMNRewards->setText(QString::number(chartData->totalMNRewards / COIN) +" EPG MNR");
 
     series->append(set0);
-    if(hasZepgStakes)
+    if(hasMNRewards)
         series->append(set1);
 
     // bar width

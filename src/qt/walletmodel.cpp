@@ -148,6 +148,12 @@ CAmount WalletModel::getColdStakedBalance() const
     return wallet->GetColdStakingBalance();
 }
 
+int WalletModel::getRequiredMasternodeCollateral() const
+{
+    return Params().GetRequiredMasternodeCollateral(chainActive.Height());
+}
+
+
 bool WalletModel::isColdStaking() const
 {
     // TODO: Complete me..

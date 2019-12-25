@@ -160,6 +160,8 @@ public:
 
     CAmount getDelegatedBalance() const;
     CAmount getColdStakedBalance() const;
+    
+    int getRequiredMasternodeCollateral() const;
 
     bool isColdStaking() const;
 

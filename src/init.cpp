@@ -626,6 +626,8 @@ std::string LicenseInfo()
            "\n" +
            FormatParagraph(strprintf(_("Copyright (C) 2015-%i The PIVX Core Developers"), COPYRIGHT_YEAR)) + "\n" +
            "\n" +
+           FormatParagraph(strprintf(_("Copyright (C) %i The Encocoinplus Core Developers"), COPYRIGHT_YEAR)) + "\n" +
+           "\n" +
            FormatParagraph(_("This is experimental software.")) + "\n" +
            "\n" +
            FormatParagraph(_("Distributed under the MIT software license, see the accompanying file COPYING or <http://www.opensource.org/licenses/mit-license.php>.")) + "\n" +
@@ -1517,7 +1519,7 @@ bool AppInit2()
                         }
                     }
                 }
-
+/*
                 // Wrapped serials inflation check
                 bool reindexDueWrappedSerials = false;
                 bool reindexZerocoin = false;
@@ -1583,7 +1585,7 @@ bool AppInit2()
                         }
                     }
                 }
-
+*/
                 if (!fReindex) {
                     uiInterface.InitMessage(_("Verifying blocks..."));
 
@@ -1927,9 +1929,9 @@ bool AppInit2()
         }
     }
 
-    fEnableZeromint = GetBoolArg("-enablezeromint", true);
+    fEnableZeromint = GetBoolArg("-enablezeromint", false);
 
-    nZeromintPercentage = GetArg("-zeromintpercentage", 10);
+    nZeromintPercentage = GetArg("-zeromintpercentage", 0);
     if (nZeromintPercentage > 100) nZeromintPercentage = 100;
     if (nZeromintPercentage < 1) nZeromintPercentage = 1;
 

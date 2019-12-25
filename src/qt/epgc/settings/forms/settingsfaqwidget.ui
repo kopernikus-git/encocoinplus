@@ -831,7 +831,7 @@
                            zEPG is an optional privacy-centric method of coin mixing on the
                            EPGC blockchain. Basically all your transactions cannot be tracked
                            on to any block explorer. You can read more about the technicals in the
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt;
+                           &lt;a style='color: #fafa84' href='https://encocoin.net'&gt;
                            &quot;EPGC Zerocoin (zEPG) Technical Paper&quot;&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </string>
@@ -1032,7 +1032,7 @@
                            marks and restart your wallet to disable automint.&lt;/p&gt;
                            &lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;
                            You can read more about zEPG in the
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt; &quot;EPGC Zerocoin (zEPG) Technical Paper&quot;&lt;/a&gt;.
+                           &lt;a style='color: #fafa84' href='https://encocoin.net'&gt; &quot;EPGC Zerocoin (zEPG) Technical Paper&quot;&lt;/a&gt;.
                            If you would like to keep and stake your zEPG, please read the &quot;How do I stake&quot;
                            section of the FAQ below.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
@@ -1228,12 +1228,12 @@
                         <property name="text">
                          <string>
                            &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;
-                           To Stake EPGC:
+                           To Stake EPG:
                            &lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;
                            &lt;ol&gt;&lt;li&gt;
                            Make sure your wallet is completely synchronized and you are using the latest release.
                            &lt;li&gt;
-                           You must have a balance of EPGC with a minimum of 101 confirmations.
+                           You must have a balance of EPG with a minimum of 101 confirmations.
                            &lt;li&gt;
                            Your wallet must stay online and be unlocked for anonymization and staking purposes.
                            &lt;li&gt;
@@ -1346,10 +1346,10 @@
                          <string>
                            &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;
                            We have support channels in most of our official chat groups, for example
-                           &lt;a style='color: #b088ff' href='https://discord.EPGC.org'&gt;
+                           &lt;a style='color: #fafa84' href='https://discord.gg/Qp3SbWm'&gt;
                            #support in our Discord&lt;/a&gt;.
                            If you prefer to submit a ticket, One can be
-                           &lt;a style='color: #b088ff' href='https://EPGC.freshdesk.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.freshdesk.com'&gt;
                            our Freshdesk support site&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </string>
@@ -1444,8 +1444,8 @@
                         <property name="text">
                          <string>
                            &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;
-                           A masternode is a computer running a full node EPGC core wallet with a
-                           requirement of 10,000 EPG secured collateral to provide extra services
+                           A masternode is a computer running a full node EPG core wallet with a
+                           requirement of 250/450 EPG secured collateral to provide extra services
                            to the network and in return, receive a portion of the block reward
                            regularly.  These services include:
                            &lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;
@@ -1467,10 +1467,10 @@
                            Masternode Perks:
                            &lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;
                            &lt;ul&gt;
-                           &lt;li&gt;Participate in EPGC Governance&lt;/li&gt;
+                           &lt;li&gt;Participate in EPG Governance&lt;/li&gt;
                            &lt;li&gt;Earn Masternode Rewards&lt;/li&gt;
                            &lt;li&gt;Commodity option for future sale&lt;/li&gt;
-                           &lt;li&gt;Help secure the EPGC network&lt;/li&gt;
+                           &lt;li&gt;Help secure the EPG network&lt;/li&gt;
                            &lt;/ul&gt;
                            &lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;
 
@@ -1573,7 +1573,7 @@
                       <item>
                        <widget class="QLabel" name="labelContent10">
                         <property name="text">
-                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;A Masternode Controller wallet is where the 10,000 EPG collateral can reside during a Controller-Remote masternode setup. It is a wallet that can activate the remote masternode wallet/s and allows you to keep your collateral coins offline while the remote masternode remains online. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;A Masternode Controller wallet is where the 250/450 EPG collateral can reside during a Controller-Remote masternode setup. It is a wallet that can activate the remote masternode wallet/s and allows you to keep your collateral coins offline while the remote masternode remains online. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                         </property>
                         <property name="alignment">
                          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

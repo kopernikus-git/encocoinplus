@@ -4244,7 +4244,7 @@ per vedere e spendere i saldi sulla rete.
                            zEPG is an optional privacy-centric method of coin mixing on the
                            EPGC blockchain. Basically all your transactions cannot be tracked
                            on to any block explorer. You can read more about the technicals in the
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt;
                            "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </source>
@@ -4253,7 +4253,7 @@ per vedere e spendere i saldi sulla rete.
                            zEPG è un metodo opzionale incentrato sulla privacy per la miscelazione delle valute sulla
 Blockchain EPGC. Essenzialmente, tutte le tue transazioni non potranno essere tracciate
 su un block explorer. Puoi leggere di più sugli aspetti tecnici nel
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt;
                            "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </translation>
@@ -4303,7 +4303,7 @@ per diventare idoneo alla spesa.
                            marks and restart your wallet to disable automint.&lt;/p&gt;
                            &lt;/p&gt;&lt;p align="justify"&gt;
                            You can read more about zEPG in the
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt; "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
+                           &lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt; "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
                            If you would like to keep and stake your zEPG, please read the "How do I stake"
                            section of the FAQ below.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
@@ -4320,7 +4320,7 @@ il tuo file epgc.conf e aggiungere&lt;i&gt;enablezeromint=0&lt;/i&gt; senza gli 
 e far ripartire il portafoglio per disabilitare la forgiatura automatica.&lt;/p&gt;
                            &lt;/p&gt;&lt;p align="justify"&gt;
                            Puoi leggere di più su zEPG nel
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt; "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
+                           &lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt; "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
                            Se desideri effettuare lo staking dei tuoi zEPG, leggi "Come faccio ad effettuare lo staking"
 nella sezione delle FAQ di seguito.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
@@ -4430,20 +4430,20 @@ Se desideri più zEPG, dovrai forgiare il saldo nella scheda "Privacy".
         <source>
                            &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align="justify"&gt;
                            We have support channels in most of our official chat groups, for example
-                           &lt;a style='color: #b088ff' href='https://Discord.EPGC.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://Discord.EPGC.com'&gt;
                            #support in our Discord&lt;/a&gt;.
                            If you prefer to submit a ticket, One can be
-                           &lt;a style='color: #b088ff' href='https://EPGC.FreshDesk.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.FreshDesk.com'&gt;
                            our Freshdesk support site&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </source>
         <translation>
                            &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align="justify"&gt;
                            Abbiamo canali di supporto nella maggior parte dei nostri gruppi di chat ufficiali, ad esempio
-                           &lt;a style='color: #b088ff' href='https://Discord.EPGC.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://Discord.EPGC.com'&gt;
                            #support nel nostro Discord&lt;/a&gt;.
                            Se preferisci aprire un ticket, puoi farlo su
-                           &lt;a style='color: #b088ff' href='https://EPGC.FreshDesk.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.FreshDesk.com'&gt;
                            il nostro sito di supporto Freshdesk&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </translation>

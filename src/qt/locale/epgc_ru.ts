@@ -4238,7 +4238,7 @@ EPGC использует консенсус PoS (Proof of Stake), позвол�
                            zEPG is an optional privacy-centric method of coin mixing on the
                            EPGC blockchain. Basically all your transactions cannot be tracked
                            on to any block explorer. You can read more about the technicals in the
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt;
                            "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </source>
@@ -4247,7 +4247,7 @@ EPGC использует консенсус PoS (Proof of Stake), позвол�
 zEPG - это необязательная конфиденциальность, которая возможна при микшировании монет
 в блокчейне EPGC. По сути,ни одна транзакция не может быть отслежена
 ни в одном из обозревателей блоков. Вы можете прочитать больше о технических характеристиках в
-&lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt;
+&lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt;
 "Техническом документе EPGC Zerocoin (zEPG)"&lt;/a&gt;.
  &lt;/p&gt;&lt;/body&gt;&lt;/html&gt; </translation>
     </message>
@@ -4295,7 +4295,7 @@ zEPG - это необязательная конфиденциальность,
                            marks and restart your wallet to disable automint.&lt;/p&gt;
                            &lt;/p&gt;&lt;p align="justify"&gt;
                            You can read more about zEPG in the
-                           &lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt; "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
+                           &lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt; "EPGC Zerocoin (zEPG) Technical Paper"&lt;/a&gt;.
                            If you would like to keep and stake your zEPG, please read the "How do I stake"
                            section of the FAQ below.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
@@ -4310,7 +4310,7 @@ zEPG - это необязательная конфиденциальность,
 Если вы не используете EPGC-QT или GUI, вы можете просто открыть
 свой файл epgc.conf и добавить &lt;i&gt;enablezeromint=0&lt;/i&gt; без кавычек и
 перезапустите свой кошелек для отключения  автоматической чеканки. &lt;/p&gt; &lt;/p&gt;&lt;p align="justify"&gt; Вы можете прочитать больше о zEPG в
-&lt;a style='color: #b088ff' href='https://EPGC.org/zepg/'&gt;
+&lt;a style='color: #fafa84' href='https://EPGC.org/zepg/'&gt;
  "Технический документ EPGC Zerocoin (zEPG)"&lt;/a&gt;.
 Если вы хотите продолжать стекинг zEPG, ознакомьтесь с разделом" Как осуществить стекинг"
 в разделе часто задаваемых вопросов ниже.
@@ -4403,20 +4403,20 @@ zEPG можно потратить и отправить на любой адр�
         <source>
                            &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align="justify"&gt;
                            We have support channels in most of our official chat groups, for example
-                           &lt;a style='color: #b088ff' href='https://Discord.EPGC.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://Discord.EPGC.com'&gt;
                            #support in our Discord&lt;/a&gt;.
                            If you prefer to submit a ticket, One can be
-                           &lt;a style='color: #b088ff' href='https://EPGC.FreshDesk.com'&gt;
+                           &lt;a style='color: #fafa84' href='https://EPGC.FreshDesk.com'&gt;
                            our Freshdesk support site&lt;/a&gt;.
                            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                          </source>
         <translation>
 &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align="justify"&gt;
 У нас есть каналы поддержки в большинстве наших официальных групп, например
-&lt;a style='color: #b088ff' href='https://Discord.EPGC.com'&gt;
+&lt;a style='color: #fafa84' href='https://Discord.EPGC.com'&gt;
 #support в нашем Discord&lt;/a&gt;.
 Если вы хотите задать вопрос, одним из способов это сделать может послужить
-&lt;a style='color: #b088ff' href='https://EPGC.FreshDesk.com'&gt;
+&lt;a style='color: #fafa84' href='https://EPGC.FreshDesk.com'&gt;
 наш сайт поддержки Freshdesk&lt;/a&gt;.
 &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
