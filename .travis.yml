@@ -39,10 +39,7 @@ stages:
   - lint
   - cmake
   - test
-addons:
-    apt:
-        packages:
-            - sshpass
+
 env:
   global:
     - MAKEJOBS=-j3
