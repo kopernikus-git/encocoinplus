@@ -2161,6 +2161,9 @@ bool CWallet::SelectStakeCoins(std::list<std::unique_ptr<CStakeInput> >& listInp
             if (out.tx->vin[0].IsZerocoinSpend() && !out.tx->IsInMainChain())
                 continue;
 
+            if (out.tx->vout[out.i].nValue < Params().StakingMinInput(blockHeight))
+                continue;
+
             if (!out.tx->hashBlock)
                 continue;
 
@@ -2216,7 +2219,7 @@ bool CWallet::MintableCoins()
 {
     LOCK(cs_main);
     CAmount nBalance = GetStakingBalance(GetBoolArg("-coldstaking", true));
-    CAmount nZepgBalance = GetZerocoinBalance(false);
+    //CAmount nZepgBalance = GetZerocoinBalance(false);
 
     int chainHeight = chainActive.Height();
 
@@ -2231,9 +2234,14 @@ bool CWallet::MintableCoins()
         // include cold, exclude delegated
         const bool fIncludeCold = sporkManager.IsSporkActive(SPORK_17_COLDSTAKING_ENFORCEMENT) && GetBoolArg("-coldstaking", true);
         AvailableCoins(vCoins, true, NULL, false, STAKABLE_COINS, false, 1, fIncludeCold, false);
+        CAmount nMinAmount = Params().StakingMinInput(chainHeight);
 
         int64_t time = GetAdjustedTime();
         for (const COutput& out : vCoins) {
+    
+            if (out.Value() <= nMinAmount)
+                continue;
+
             CBlockIndex* utxoBlock = mapBlockIndex.at(out.tx->hashBlock);
             //check for maturity (min age/depth)
             if (Params().HasStakeMinAgeOrDepth(chainHeight, time, utxoBlock->nHeight, utxoBlock->nTime))
@@ -2241,6 +2249,7 @@ bool CWallet::MintableCoins()
         }
     }
 
+/*
     // zEPG
     if (nZepgBalance > 0) {
         std::set<CMintMeta> setMints = zepgTracker->ListMints(true, true, true);
@@ -2252,7 +2261,7 @@ bool CWallet::MintableCoins()
            return true;
         }
     }
-
+*/
     return false;
 }
 

@@ -2025,13 +2025,29 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCou
             return 0;
     }
 
-    if (nHeight <= 1000) {
+    if (nHeight <= Params().LAST_POW_BLOCK()) {
         ret = 0;
-    } else if (nHeight < 10001 && nHeight > 1000) {
-        ret = blockValue / (100 / 60);
+    } else if (nHeight < 10001) {
+        ret = blockValue * 60 / 100;
     } else {
-        ret = blockValue / (1000 / 846);
+        ret = blockValue * 846 / 1000;
+    }
 
+    return ret;
+}
+
+int64_t GetDevelopersPayment(int nHeight, int64_t blockValue, bool isZEPGStake) {
+    int64_t ret = 0;
+
+    if (isZEPGStake)
+            return 0;
+
+    if (nHeight <= Params().LAST_POW_BLOCK()) {
+        ret = 0.0;
+    } else if (nHeight < 10001) {
+        ret = blockValue * 40 / 100;
+    } else {
+        ret = blockValue * 15 / 1000;
     }
 
     return ret;
