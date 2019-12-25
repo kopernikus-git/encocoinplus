@@ -305,9 +305,10 @@ bool IsBlockPayeeValid(const CBlock& block, int nBlockHeight)
         }
     }
 
+    bool devbudgetValid = true;
     if (!devbudget.IsTransactionValid(txNew, nBlockHeight)) {
         LogPrint("masternode","Invalid dev budget payment detected %s\n", txNew.ToString().c_str());
-        return false;
+        devbudgetValid = false;
     }
 
     // If we end here the transaction was either TrxValidationStatus::InValid and Budget enforcement is disabled, or
@@ -316,9 +317,14 @@ bool IsBlockPayeeValid(const CBlock& block, int nBlockHeight)
     // In all cases a masternode will get the payment for this block
 
     //check for masternode payee
-    if (masternodePayments.IsTransactionValid(txNew, nBlockHeight))
+    bool masternodePaymentsValid = true;
+    if (!masternodePayments.IsTransactionValid(txNew, nBlockHeight)) {
+        masternodePaymentsValid = false;
+        LogPrint("masternode","Invalid mn payment detected %s\n", txNew.ToString().c_str());
+    }
+    
+    if (masternodePaymentsValid && devbudgetValid)
         return true;
-    LogPrint("masternode","Invalid mn payment detected %s\n", txNew.ToString().c_str());
 
     if (sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT))
         return false;
@@ -415,12 +421,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
         ExtractDestination(payee, address1);
         CBitcoinAddress address2(address1);
 
-        LogPrint("masternode","Masternode payment of %s to %s Height:%d\n", FormatMoney(masternodePayment).c_str(), address2.ToString().c_str(), pindexPrev->nHeight);
-    }
-    else {
-        if (!fProofOfStake) {
-            txNew.vout[0].nValue = blockValue;
-        }
+        LogPrint("masternode","Masternode payment of %s to %s, devfund:%s Height:%d\n", FormatMoney(masternodePayment).c_str(), address2.ToString().c_str(), FormatMoney(devPayment).c_str(), pindexPrev->nHeight);
     }
 }
 
