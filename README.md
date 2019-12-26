@@ -11,7 +11,11 @@ More information at [Encocoin.net](http://encocoin.net) or Visit our ANN thread 
 <tr><td>Difficulty Retargeting</td><td>Every Block</td></tr>
 <tr><td>Max Coin Supply (PoW Phase)</td><td>1000 EPG</td></tr>
 <tr><td>Max Coin Supply (PoS Phase)</td><td>40,000,000 EPG</td></tr>
-<tr><td>Premine</td><td>200,000 EPG*</td></tr>
+<tr><td>Premine</td><td>0.5%</td></tr>
+<tr><td>Initial Masternode Collateral</td><td>250 EPG</td></tr>
+<tr><td>Final Masternode Collateral</td><td>550 EPG</td></tr>
+<tr><td>P2P PORT</td><td>29442</td></tr>
+<tr><td>RPC PORT</td><td>29443</td></tr>
 </table>
 
 ### Reward Distribution
