@@ -294,7 +294,7 @@ public:
     int GetRequiredMasternodeCollateral(int nTargetHeight) const
     {
         if(nTargetHeight > 10000  ) {
-            return 450;
+            return 550;
         }
 
         return 250;
@@ -308,13 +308,13 @@ public:
         else if (nTargetHeight < 20000) {
             return 10 * COIN;
         }
-        else if (nTargetHeight < 40000) {
+        else if (nTargetHeight < 60000) {
             return 15 * COIN;
         }
-        else if (nTargetHeight < 60000) {
+        else if (nTargetHeight < 100000) {
             return 30 * COIN;
         }
-        else if (nTargetHeight < 100000) {
+        else if (nTargetHeight < 150000) {
             return 40 * COIN;
         }
         else {
