@@ -966,6 +966,10 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     font-size:17px;
 }
 
+*[cssClass="text-main-hash"] {
+    color:#FFFFFF;
+    font-size:12px;
+}
 
 *[cssClass="text-main-settings"] {
     color:#FFFFFF;
@@ -2512,7 +2516,7 @@ QPushButton[cssClass="btn-settings-check"]:checked {
 }
 
 QPushButton[cssClass="btn-settings-options"] {
-    background-color: rgba(92, 75, 125, 0.2);
+    background-color: rgba(123, 125, 75, 0.2);
     border:none;
     font-size:20px;
     color: rgba(255, 255, 255, 0.7);
@@ -2530,7 +2534,7 @@ QPushButton[cssClass="btn-settings-options"]:checked {
 }
 
 QPushButton[cssClass="btn-settings-options"]:hover {
-    background-color: rgba(135, 123, 159, 0.7);
+    background-color: rgba(158, 158, 123, 0.7);
     border:none;
     font-size:20px;
     color: #FFFFFF;
@@ -2665,7 +2669,7 @@ QPushButton[cssClass="btn-faq-options"] {
 }
 
 QPushButton[cssClass="btn-faq-options"]:checked {
-    background-color: rgba(176 ,136 ,255, 0.2);
+    background-color: rgba(249, 252, 136, 0.2);
     border:none;
     font-size:18px;
     color: #FFFFFF;

@@ -103,6 +103,11 @@ libzerocoin::ZerocoinParams* CChainParams::Zerocoin_Params(bool useModulusV1) co
 bool CChainParams::HasStakeMinAgeOrDepth(const int contextHeight, const uint32_t contextTime,
         const int utxoFromBlockHeight, const uint32_t utxoFromBlockTime) const
 {
+    // before stake modifier V2, the age required was 60 * 60 (1 hour). Not required for regtest
+    if (!IsStakeModifierV2(contextHeight))
+        return NetworkID() == CBaseChainParams::REGTEST || (utxoFromBlockTime + nStakeMinAge <= contextTime);
+
+
     bool StakeMinAgOk = (utxoFromBlockTime + nStakeMinAge <= contextTime);
     
     if (!StakeMinAgOk)
@@ -193,10 +198,10 @@ public:
         nBlockDoubleAccumulated = 999999999;
         nEnforceNewSporkKey = 1576364812; //!> Sporks signed after Monday, August 26, 2019 11:00:00 PM GMT must use the new spork key
         nRejectOldSporkKey = 1576364812; //!> Fully reject old spork key after Thursday, September 26, 2019 11:00:00 PM GMT
-        nBlockStakeModifierlV2 = 1200;
+        nBlockStakeModifierlV2 = 15000;
         nBIP65ActivationHeight = 0;
         // Activation height for TimeProtocolV2, Blocks V7 and newMessageSignatures
-        nBlockTimeProtocolV2 = 1250;
+        nBlockTimeProtocolV2 = 15100;
 
         // Public coin spend enforcement
         nPublicZCSpends = 0;

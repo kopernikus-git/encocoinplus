@@ -544,16 +544,16 @@ void TopBar::updateBalances(const CAmount& balance, const CAmount& unconfirmedBa
                             const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance,
                             const CAmount& delegatedBalance, const CAmount& coldStakedBalance){
 
+    // Locked balance. //TODO move this to the signal properly in the future..
     CAmount nLockedBalance = 0;
     if (walletModel) {
         nLockedBalance = walletModel->getLockedBalance();
     }
+    ui->labelTitle1->setText(nLockedBalance > 0 ? tr("Available (Locked included)") : tr("Available"));
 
     // EPG Balance
+    CAmount epgAvailableBalance = balance + delegatedBalance;
     //CAmount nTotalBalance = balance + unconfirmedBalance + immatureBalance;
-    CAmount epgAvailableBalance = balance + delegatedBalance - nLockedBalance;
-
-    // zEPG Balance
     //CAmount matureZerocoinBalance = zerocoinBalance - unconfirmedZerocoinBalance - immatureZerocoinBalance;
 
     // Set
@@ -571,7 +571,7 @@ void TopBar::updateBalances(const CAmount& balance, const CAmount& unconfirmedBa
     //ui->labelPendingzEpg->setText(GUIUtil::formatBalance(unconfirmedZerocoinBalance, nDisplayUnit, true));
 
     ui->labelImmatureEpg->setText(GUIUtil::formatBalance(immatureBalance, nDisplayUnit));
-   // ui->labelImmaturezEpg->setText(GUIUtil::formatBalance(immatureZerocoinBalance, nDisplayUnit, true));
+    //ui->labelImmaturezEpg->setText(GUIUtil::formatBalance(immatureZerocoinBalance, nDisplayUnit, true));
 }
 
 void TopBar::resizeEvent(QResizeEvent *event){
