@@ -14,6 +14,8 @@ More information at [Encocoin.net](http://encocoin.net) or Visit our ANN thread 
 <tr><td>Premine</td><td>0.5%</td></tr>
 <tr><td>Initial Masternode Collateral</td><td>250 EPG</td></tr>
 <tr><td>Final Masternode Collateral</td><td>550 EPG</td></tr>
+<tr><td>Initial Minimum Staking Amount</td><td>10 EPG</td></tr>
+<tr><td>Final Minimum Staking Amount</td><td>40 EPG</td></tr>
 <tr><td>P2P PORT</td><td>29442</td></tr>
 <tr><td>RPC PORT</td><td>29443</td></tr>
 </table>
@@ -29,7 +31,7 @@ More information at [Encocoin.net](http://encocoin.net) or Visit our ANN thread 
 ### PoW Rewards Breakdown
 
 <table>
-<th>Block Height</th><th>Masternodes</th><th>Miner</th><th>Staking</th>
+<th>Block Height</th><th>Masternodes</th><th>Miner</th><th>Stakers</th>
 <tr><td>0-1000</td><td>0% (0.00 EPG)</td><td>100% (1.00 EPG)</td><td>0% (0.00 EPG)</td></tr>
 </table>
 
@@ -37,6 +39,6 @@ More information at [Encocoin.net](http://encocoin.net) or Visit our ANN thread 
 
 <table>
 <th>Phase</th><th>Block Height</th><th>Reward</th><th>Masternodes</th><th>Stakers</th><th>Dev</th>
-<tr><td>Initial Phase</td><td>1001-10000</td><td>1 EPG</td><td>60% (0.6 EPG)</td><th>0% (0.0 EPG)</th><td>40% (0.4 EPG)</td></tr>
-<tr><td>Final Phase</td><td>10001-infinity</td><td>1 EPG</td><td>84.6% (0.846 EPG)</td><th>0.4% (0.004 EPG)</th><td>15% (0.15 EPG)</td></tr>
+<tr><td>Initial</td><td>1001-10000</td><td>1 EPG</td><td>60% (0.6 EPG)</td><th>0.2% (0.002 EPG)</th><td>39.8% (0.398 EPG)</td></tr>
+<tr><td>Final</td><td>10001-infinity</td><td>1 EPG</td><td>84.6% (0.846 EPG)</td><th>0.4% (0.004 EPG)</th><td>15% (0.15 EPG)</td></tr>
 </table>
