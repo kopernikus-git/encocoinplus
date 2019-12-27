@@ -112,7 +112,7 @@ gpg --output ${VERSION}-win-unsigned/$NAME/epgc-win-${VERSION%\.*}-build.assert.
 Uploading Signatures
 --------------------
 Make a Pull Request (both the `.assert` and `.assert.sig` files) to the
-[gitian.sigs](https://github.com/epgc-project/gitian.sigs/) repository:
+[gitian.sigs](https://github.com/Encocoin/gitian.sigs/) repository:
 
 ```bash
 git checkout -b ${VERSION}-not-codesigned

@@ -110,7 +110,7 @@ def setup_repos():
     if not os.path.isdir('gitian-builder'):
         subprocess.check_call(['git', 'clone', 'https://github.com/devrandom/gitian-builder.git'])
     if not os.path.isdir('epgc'):
-        subprocess.check_call(['git', 'clone', 'https://github.com/epgc-Project/epgc.git'])
+        subprocess.check_call(['git', 'clone', 'https://github.com/epgc-Project/encocoinplus.git'])
     os.chdir('gitian-builder')
     make_image_prog = ['bin/make-base-vm', '--suite', 'bionic', '--arch', 'amd64']
     if args.docker:

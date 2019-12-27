@@ -43,7 +43,7 @@ Build EPGC Core
 
 1. Clone the EPGC Core source code:
 
-        git clone https://github.com/epgc-project/epgc
+        git clone https://github.com/Encocoin/encocoinplus
         cd epgc
 
 2.  Make the Homebrew OpenSSL headers visible to the configure script  (do ```brew info openssl``` to find out why this is necessary, or if you use Homebrew with installation folders different from the default).

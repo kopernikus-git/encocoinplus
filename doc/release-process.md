@@ -6,7 +6,7 @@ Release Process
 ### Before every release candidate
 
 * Update translations (ping Fuzzbawls on Discord) see [translation_process.md](https://github.com/EPGC-Project/EPGC/blob/master/doc/translation_process.md#synchronising-translations).
-* Update manpages, see [gen-manpages.sh](https://github.com/epgc-project/epgc/blob/master/contrib/devtools/README.md#gen-manpagessh).
+* Update manpages, see [gen-manpages.sh](https://github.com/Encocoin/encocoinplus/blob/master/contrib/devtools/README.md#gen-manpagessh).
 * Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`)
 
 ### Before every major and minor release
@@ -49,10 +49,10 @@ If you're using the automated script (found in [contrib/gitian-build.py](/contri
 Check out the source code in the following directory hierarchy.
 
     cd /path/to/your/toplevel/build
-    git clone https://github.com/epgc-project/gitian.sigs.git
-    git clone https://github.com/epgc-project/epgc-detached-sigs.git
+    git clone https://github.com/Encocoin/gitian.sigs.git
+    git clone https://github.com/Encocoin/epgc-detached-sigs.git
     git clone https://github.com/devrandom/gitian-builder.git
-    git clone https://github.com/epgc-project/epgc.git
+    git clone https://github.com/Encocoin/encocoinplus.git
 
 ### EPGC maintainers/release engineers, suggestion for writing release notes
 
