@@ -40,5 +40,5 @@ More information at [Encocoin.net](http://encocoin.net) or Visit our ANN thread 
 <table>
 <th>Phase</th><th>Block Height</th><th>Reward</th><th>Masternodes</th><th>Stakers</th><th>Dev</th>
 <tr><td>Initial</td><td>1001-10000</td><td>1 EPG</td><td>60% (0.6 EPG)</td><th>0.2% (0.002 EPG)</th><td>39.8% (0.398 EPG)</td></tr>
-<tr><td>Final</td><td>10001-infinity</td><td>1 EPG</td><td>84.6% (0.846 EPG)</td><th>0.4% (0.004 EPG)</th><td>15% (0.15 EPG)</td></tr>
+<tr><td>Final</td><td>10001-infinity</td><td>1 EPG</td><td>84.8% (0.848 EPG)</td><th>0.2% (0.002 EPG)</th><td>15% (0.15 EPG)</td></tr>
 </table>
