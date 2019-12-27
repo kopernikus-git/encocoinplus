@@ -8,6 +8,7 @@
 #include "qt/epgc/qtutils.h"
 #include "clientversion.h"
 #include "optionsmodel.h"
+#include <QScrollBar>
 
 NavMenuWidget::NavMenuWidget(EPGCGUI *mainWindow, QWidget *parent) :
     PWidget(mainWindow, parent),
@@ -35,9 +36,9 @@ NavMenuWidget::NavMenuWidget(EPGCGUI *mainWindow, QWidget *parent) :
     ui->btnAddress->setText("CONTACTS\n");
     ui->btnAddress->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
-    //ui->btnPrivacy->setProperty("name", "privacy");
-    //ui->btnPrivacy->setText("PRIVACY\n");
-    //ui->btnPrivacy->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    ui->btnPrivacy->setProperty("name", "privacy");
+    ui->btnPrivacy->setText("PRIVACY\n");
+    ui->btnPrivacy->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
     ui->btnMaster->setProperty("name", "master");
     ui->btnMaster->setText("MASTER\r\nNODES");
@@ -55,17 +56,24 @@ NavMenuWidget::NavMenuWidget(EPGCGUI *mainWindow, QWidget *parent) :
     ui->btnReceive->setText("RECEIVE\n");
     ui->btnReceive->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
-    btns = {ui->btnDashboard, ui->btnSend, ui->btnReceive, 
-	    ui->btnAddress, 
-            //ui->btnPrivacy, 
-            ui->btnMaster, 
-            ui->btnColdStaking, ui->btnSettings, ui->btnColdStaking};
+    btns = {ui->btnDashboard, ui->btnSend, ui->btnReceive, ui->btnAddress, ui->btnPrivacy, ui->btnMaster, ui->btnColdStaking, ui->btnSettings, ui->btnColdStaking};
     onNavSelected(ui->btnDashboard, true);
 
+        ui->scrollAreaNav->setWidgetResizable(true);
+
+    QSizePolicy scrollAreaPolicy = ui->scrollAreaNav->sizePolicy();
+    scrollAreaPolicy.setVerticalStretch(1);
+    ui->scrollAreaNav->setSizePolicy(scrollAreaPolicy);
+
+    QSizePolicy scrollVertPolicy = ui->scrollAreaNavVert->sizePolicy();
+    scrollVertPolicy.setVerticalStretch(1);
+    ui->scrollAreaNavVert->setSizePolicy(scrollVertPolicy);
+    
     connectActions();
 }
 
 void NavMenuWidget::loadWalletModel() {
+    ui->btnPrivacy->setVisible(false);
     if (walletModel && walletModel->getOptionsModel()) {
         ui->btnColdStaking->setVisible(walletModel->getOptionsModel()->isColdStakingScreenEnabled());
     }
@@ -78,7 +86,7 @@ void NavMenuWidget::connectActions() {
     connect(ui->btnDashboard,SIGNAL(clicked()),this, SLOT(onDashboardClicked()));
     connect(ui->btnSend,SIGNAL(clicked()),this, SLOT(onSendClicked()));
     connect(ui->btnAddress,SIGNAL(clicked()),this, SLOT(onAddressClicked()));
-    //connect(ui->btnPrivacy,SIGNAL(clicked()),this, SLOT(onPrivacyClicked()));
+    connect(ui->btnPrivacy,SIGNAL(clicked()),this, SLOT(onPrivacyClicked()));
     connect(ui->btnMaster,SIGNAL(clicked()),this, SLOT(onMasterNodesClicked()));
     connect(ui->btnSettings,SIGNAL(clicked()),this, SLOT(onSettingsClicked()));
     connect(ui->btnReceive,SIGNAL(clicked()),this, SLOT(onReceiveClicked()));
@@ -88,7 +96,7 @@ void NavMenuWidget::connectActions() {
     ui->btnSend->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_2));
     ui->btnReceive->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_3));
     ui->btnAddress->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_4));
-    //ui->btnPrivacy->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_5));
+    ui->btnPrivacy->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_5));
     ui->btnMaster->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_6));
     ui->btnColdStaking->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_7));
     ui->btnSettings->setShortcut(QKeySequence(SHORT_KEY + Qt::Key_8));
@@ -111,8 +119,8 @@ void NavMenuWidget::onAddressClicked(){
 
 
 void NavMenuWidget::onPrivacyClicked(){
-   // window->goToPrivacy();
-    //onNavSelected(ui->btnPrivacy);
+    window->goToPrivacy();
+    onNavSelected(ui->btnPrivacy);
 }
 
 void NavMenuWidget::onMasterNodesClicked(){
@@ -153,7 +161,8 @@ void NavMenuWidget::selectSettings() {
 
 void NavMenuWidget::onShowHideColdStakingChanged(bool show) {
     ui->btnColdStaking->setVisible(show);
-    window->setMinimumHeight(show ? 780 : 740);
+    if (show)
+        ui->scrollAreaNav->verticalScrollBar()->setValue(ui->btnColdStaking->y());
 }
 
 void NavMenuWidget::updateButtonStyles(){
@@ -161,7 +170,7 @@ void NavMenuWidget::updateButtonStyles(){
          ui->btnDashboard,
          ui->btnSend,
          ui->btnAddress,
-         //ui->btnPrivacy,
+         ui->btnPrivacy,
          ui->btnMaster,
          ui->btnSettings,
          ui->btnReceive,
