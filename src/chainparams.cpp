@@ -249,6 +249,7 @@ public:
         vSeeds.clear();
         vSeeds.push_back(CDNSSeedData("173.199.119.55", "173.199.119.55"));     // Primary DNS Seeder 
         vSeeds.push_back(CDNSSeedData("149.28.34.121", "149.28.34.121")); 
+        vSeeds.push_back(CDNSSeedData("149.28.235.72", "149.28.235.72"));
         
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 15);
