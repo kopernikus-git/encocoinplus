@@ -1,7 +1,7 @@
 EPGC Core integration/staging repository
 =====================================
-EPGC(EncocoinPlus) is an open source crypto-currency focused on fast private transactions using the Zerocoin protocol in its public blockchain, with low transaction fees & environmental footprint.  It utilizes anonymous proof of stake protocol, called zPoS, combined with regular PoS and masternodes for securing its network. 
-The goal of Encococin cum EncocoinPlus is to implement DLT to achieve a decentralized sustainable crypto currency with near instant full-time private transactions, fair governance and community intelligence in the issuance, processing, verification, tracking and validation of fianacial and trading instruments globally.
+EPG(EncocoinPlus) is an open source crypto-currency focused on fast private transactions using the Zerocoin protocol in its public blockchain, with low transaction fees & environmental footprint.  It utilizes anonymous proof of stake protocol, called zPoS, combined with regular PoS and masternodes for securing its network. 
+The goal of Encocoin cum EncocoinPlus is to implement DLT to achieve a decentralized sustainable crypto currency with near instant full-time private transactions, fair governance and community intelligence in the issuance, processing, verification, tracking and validation of financial and trading instruments globally.
 More information at [Encocoin.net](http://encocoin.net) or Visit our ANN thread at [BitcoinTalk](http://www.bitcointalk.org/index.php?topic=1262920)
 
 ### Coin Specs
