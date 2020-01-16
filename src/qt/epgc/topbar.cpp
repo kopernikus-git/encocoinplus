@@ -214,6 +214,9 @@ void TopBar::lockDropdownClicked(const StateClicked& state){
                 walletModel->setWalletLocked(true);
                 ui->pushButtonLock->setButtonText("Wallet Locked");
                 ui->pushButtonLock->setButtonClassStyle("cssClass", "btn-check-status-lock", true);
+                // Directly update the staking status icon when the wallet is manually locked here
+                // so the feedback is instant (no need to wait for the polling timeout)
+                setStakingStatusActive(false);
                 break;
             }
             case 1: {
@@ -360,20 +363,20 @@ void TopBar::updateAutoMintStatus(){
     ui->pushButtonMint->setChecked(fEnableZeromint);
 }
 
+void TopBar::setStakingStatusActive(bool fActive)
+{
+    if (ui->pushButtonStack->isChecked() != fActive) {
+        ui->pushButtonStack->setButtonText(fActive ? tr("Staking active") : tr("Staking not active"));
+        ui->pushButtonStack->setChecked(fActive);
+        ui->pushButtonStack->setButtonClassStyle("cssClass", (fActive ?
+                                                                "btn-check-stack" :
+                                                                "btn-check-stack-inactive"), true);
+        }
+}
 void TopBar::updateStakingStatus(){
-    if (nLastCoinStakeSearchInterval) {
-        if (!ui->pushButtonStack->isChecked()) {
-            ui->pushButtonStack->setButtonText(tr("Staking active"));
-            ui->pushButtonStack->setChecked(true);
-            ui->pushButtonStack->setButtonClassStyle("cssClass", "btn-check-stack", true);
-        }
-    }else{
-        if (ui->pushButtonStack->isChecked()) {
-            ui->pushButtonStack->setButtonText(tr("Staking not active"));
-            ui->pushButtonStack->setChecked(false);
-            ui->pushButtonStack->setButtonClassStyle("cssClass", "btn-check-stack-inactive", true);
-        }
-    }
+    setStakingStatusActive(walletModel &&
+                           !walletModel->isWalletLocked() &&
+                           walletModel->isStakingStatusActive());
 }
 
 void TopBar::setNumConnections(int count) {
@@ -422,8 +425,7 @@ void TopBar::setNumBlocks(int count) {
         emit walletSynced(true);
         if (masternodeSync.IsSynced()) {
             // Node synced
-            // TODO: Set synced icon to pushButtonSync here..
-            ui->pushButtonSync->setButtonText(tr("Synchronized"));
+	    ui->pushButtonSync->setButtonText(tr("Synchronized - Block: %1").arg(QString::number(count)));
             progressBar->setRange(0,100);
             progressBar->setValue(100);
             return;
@@ -436,7 +438,7 @@ void TopBar::setNumBlocks(int count) {
             int progress = nAttempt + (masternodeSync.RequestedMasternodeAssets - 1) * MASTERNODE_SYNC_THRESHOLD;
             if(progress >= 0){
                 // todo: MN progress..
-                text = std::string("Synchronizing additional data..");//: %p%", progress);
+                text = strprintf("Synchronizing masternodes data... - Block: %d", count);
                 //progressBar->setMaximum(4 * MASTERNODE_SYNC_THRESHOLD);
                 //progressBar->setValue(progress);
                 needState = false;
@@ -552,9 +554,9 @@ void TopBar::updateBalances(const CAmount& balance, const CAmount& unconfirmedBa
     ui->labelTitle1->setText(nLockedBalance > 0 ? tr("Available (Locked included)") : tr("Available"));
 
     // EPG Balance
-    CAmount epgAvailableBalance = balance + delegatedBalance;
-    //CAmount nTotalBalance = balance + unconfirmedBalance + immatureBalance;
-    //CAmount matureZerocoinBalance = zerocoinBalance - unconfirmedZerocoinBalance - immatureZerocoinBalance;
+    CAmount epgAvailableBalance = balance;
+    // zEPG Balance
+    CAmount matureZerocoinBalance = zerocoinBalance - unconfirmedZerocoinBalance - immatureZerocoinBalance;
 
     // Set
     QString totalEpg = GUIUtil::formatBalance(epgAvailableBalance, nDisplayUnit);

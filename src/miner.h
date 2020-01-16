@@ -19,6 +19,8 @@ class CWallet;
 struct CBlockTemplate;
 
 /** Generate a new block, without valid proof-of-work */
+CBlockIndex* GetChainTip();
+/** Generate a new block, without valid proof-of-work */
 CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, bool fProofOfStake);
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);

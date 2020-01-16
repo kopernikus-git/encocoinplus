@@ -99,6 +99,7 @@ public:
         StakeHot, // Staked via a delegated P2CS.
         P2CSDelegation, // Non-spendable P2CS, staker side.
         P2CSDelegationSent, // Spendable P2CS delegated utxo. (coin-owner)
+        P2CSDelegationSentOwner, // Spendable P2CS delegated utxo. (coin-owner)
         P2CSUnlockOwner, // Coin-owner spent the delegated utxo
         P2CSUnlockStaker // Staker watching the owner spent the delegated utxo
     };

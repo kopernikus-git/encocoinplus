@@ -456,7 +456,7 @@ static const CRPCCommand vRPCCommands[] =
         {"wallet", "delegatorremove", &delegatorremove, true, false, true},
 
         {"zerocoin", "createrawzerocoinstake", &createrawzerocoinstake, false, false, true},
-        {"zerocoin", "createrawzerocoinpublicspend", &createrawzerocoinpublicspend, false, false, true},
+        {"zerocoin", "createrawzerocoinspend", &createrawzerocoinspend, false, false, true},
         {"zerocoin", "getzerocoinbalance", &getzerocoinbalance, false, false, true},
         {"zerocoin", "listmintedzerocoins", &listmintedzerocoins, false, false, true},
         {"zerocoin", "listspentzerocoins", &listspentzerocoins, false, false, true},
@@ -477,8 +477,7 @@ static const CRPCCommand vRPCCommands[] =
         {"zerocoin", "generatemintlist", &generatemintlist, false, false, true},
         {"zerocoin", "searchdzepg", &searchdzepg, false, false, true},
         {"zerocoin", "dzepgstate", &dzepgstate, false, false, true},
-        {"zerocoin", "clearspendcache", &clearspendcache, false, false, true}
-
+  
 #endif // ENABLE_WALLET
 };
 
