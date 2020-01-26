@@ -4335,12 +4335,12 @@ bool CheckWork(const CBlock block, CBlockIndex* const pindexPrev)
 
     if (block.nBits != nBitsRequired) {
         // Epgc Specific reference to the block with the wrong threshold was used.
-        if ((block.nTime == (uint32_t) Params().EpgcBadBlockTime()) && (block.nBits == (uint32_t) Params().EpgcBadBlocknBits())) {
+        if ((block.nTime == (uint32_t) Params().EpgcBadBlockTime()) && (block.nBits == (uint32_t) Params().EpgcBadBlocknBits()) || (pindexPrev->nHeight + 1) == 15100) {
             // accept EPGC block minted with incorrect proof of work threshold
             return true;
         }
 
-        return error("%s : incorrect proof of work at %d", __func__, pindexPrev->nHeight + 1);
+        return error("%s : incorrect proof of work at %d nBits:%s nBitsRequired:%s", __func__, pindexPrev->nHeight + 1, strprintf("%08x", block.nBits), strprintf("%08x", nBitsRequired));
     }
 
     return true;
