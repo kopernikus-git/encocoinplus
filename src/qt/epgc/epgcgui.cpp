@@ -60,11 +60,13 @@ EPGCGUI::EPGCGUI(const NetworkStyle* networkStyle, QWidget* parent) :
 #else
     enableWallet = false;
 #endif // ENABLE_WALLET
-
-    QString windowTitle = tr("EPGC Core") + " - ";
-    windowTitle += ((enableWallet) ? tr("Wallet") : tr("Node"));
-    windowTitle += " " + networkStyle->getTitleAddText();
-    setWindowTitle(windowTitle);
+    
+    
+    QString windowTitle = QString::fromStdString(GetArg("-windowtitle", ""));
+    if (windowTitle.isEmpty()) {
+        windowTitle = tr("EPGC Core") + " - ";
+        windowTitle += ((enableWallet) ? tr("Wallet") : tr("Node"));
+    }
 
 #ifndef Q_OS_MAC
     QApplication::setWindowIcon(networkStyle->getAppIcon());
