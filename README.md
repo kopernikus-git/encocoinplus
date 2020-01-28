@@ -7,7 +7,7 @@ More information at [Encocoin.net](http://encocoin.net) or Visit our ANN thread 
 ### Coin Specs
 <table>
 <tr><td>Algo</td><td>Quark</td></tr>
-<tr><td>Block Time</td><td>60 Seconds</td></tr>
+<tr><td>Block Time</td><td>120 Seconds</td></tr>
 <tr><td>Difficulty Retargeting</td><td>Every Block</td></tr>
 <tr><td>Max Coin Supply (PoW Phase)</td><td>1000 EPG</td></tr>
 <tr><td>Max Coin Supply (PoS Phase)</td><td>40,000,000 EPG</td></tr>
