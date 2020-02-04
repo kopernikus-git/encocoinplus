@@ -315,20 +315,9 @@ public:
         if(nTargetHeight < 10000) {
             return 0 * COIN;
         }
-        else if (nTargetHeight < 20000) {
+        else
+        {
             return 10 * COIN;
-        }
-        else if (nTargetHeight < 60000) {
-            return 15 * COIN;
-        }
-        else if (nTargetHeight < 100000) {
-            return 30 * COIN;
-        }
-        else if (nTargetHeight < 150000) {
-            return 40 * COIN;
-        }
-        else {
-            return 50 * COIN;
         }
     }
 
