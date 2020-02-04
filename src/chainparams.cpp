@@ -203,7 +203,7 @@ public:
         nBlockStakeModifierlV2 = 15000;
         nBIP65ActivationHeight = 0;
         // Activation height for TimeProtocolV2, Blocks V7 and newMessageSignatures
-        nBlockTimeProtocolV2 = 30000;
+        nBlockTimeProtocolV2 = 60000;
 
         // Public coin spend enforcement
         nPublicZCSpends = 0;
