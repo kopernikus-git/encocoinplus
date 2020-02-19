@@ -2011,6 +2011,12 @@ int64_t GetBlockValue(int nHeight)
     int64_t nSubsidy = 0;
     if (nHeight == 0) {
         nSubsidy = 200000 * COIN;
+    } else if (nHeight >= 553600){
+        nSubsidy = 8 * COIN;
+    } else if (nHeight >= 290800){
+        nSubsidy = 6 * COIN;
+    } else if (nHeight >= 28000){
+        nSubsidy = 2 * COIN;
     } else {
         nSubsidy = 1 * COIN;
     }
@@ -2031,6 +2037,12 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCou
         ret = 0;
     } else if (nHeight < 10001) {
         ret = blockValue * 60 / 100;
+    } else if (nHeight >= 553600) {
+        ret = blockValue * 94.35 / 100;
+    } else if (nHeight >= 290800) {
+        ret = blockValue * 85.8 / 100;
+    } else if (nHeight >= 28000) {
+        ret = blockValue * 72.4 / 100;
     } else {
         ret = blockValue * 848 / 1000;
     }
@@ -2048,6 +2060,8 @@ int64_t GetDevelopersPayment(int nHeight, int64_t blockValue, bool isZEPGStake) 
         ret = 0.0;
     } else if (nHeight < 10001) {
         ret = blockValue * 398 / 1000;
+    } else if (nHeight >= 28000) {
+        ret = blockValue * 27.5 / 100;
     } else {
         ret = blockValue * 15 / 100;
     }
@@ -3128,7 +3142,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime1 - nTimeStart), 0.001 * (nTime1 - nTimeStart) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime1 - nTimeStart) / (nInputs - 1), nTimeConnect * 0.000001);
 
     //PoW phase redistributed fees to miner. PoS stage destroys fees.
-    CAmount nExpectedMint = GetBlockValue(pindex->pprev->nHeight);
+    CAmount nExpectedMint = GetBlockValue(pindex->pprev->nHeight + 1);
     if (block.IsProofOfWork())
         nExpectedMint += nFees;
 

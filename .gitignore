@@ -1,4 +1,7 @@
 .gitignore
+.kdev4
+encocoinplus.kdev4
+src/src.kdev4
 *.sublime-project
 *.sublime-workspace
 todo.txt

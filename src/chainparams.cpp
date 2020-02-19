@@ -306,6 +306,12 @@ public:
     {
         if(nTargetHeight > 10000  ) {
             return 550;
+        } else if(nTargetHeight > 553600) {
+            return 3500;
+        } else if(nTargetHeight > 290800) {
+            return 2500;
+        } else if(nTargetHeight > 28000) {
+            return 1000;
         }
 
         return 250;
