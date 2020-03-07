@@ -52,7 +52,9 @@
 #include <boost/foreach.hpp>
 #include <atomic>
 #include <queue>
+#include <iostream>
 
+using namespace std;
 
 #if defined(NDEBUG)
 #error "EPGC cannot be compiled without assertions."
@@ -975,7 +977,7 @@ bool ContextualCheckZerocoinMint(const CTransaction& tx, const libzerocoin::Publ
 bool isBlockBetweenFakeSerialAttackRange(int nHeight)
 {
     //if (Params().NetworkID() != CBaseChainParams::MAIN)
-        return false;
+       // return false;
 
     //return nHeight <= Params().Zerocoin_Block_EndFakeSerial();
 }
@@ -1158,7 +1160,7 @@ bool CheckZerocoinSpend(const CTransaction& tx, bool fVerifySignature, CValidati
     return fValidated;
 }
 
-bool CheckTransaction(const CTransaction& tx, bool fZerocoinActive, bool fRejectBadUTXO, CValidationState& state, bool fFakeSerialAttack, bool fColdStakingActive)
+bool    CheckTransaction(const CTransaction& tx, bool fZerocoinActive, bool fRejectBadUTXO, CValidationState& state, bool fFakeSerialAttack, bool fColdStakingActive)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
@@ -1630,7 +1632,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState& state, const CTransa
     return true;
 }
 
-bool AcceptableInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx, bool fLimitFree, bool* pfMissingInputs, bool fRejectInsaneFee, bool isDSTX)
+bool AcceptableInputs(CTxMemPool& pool, CValidationState& state, const CTransaction& tx, bool fLimitFree, bool* pfMissingInputs, bool fRejectInsaneFee, bool isDSTX, bool isMasternode)
 {
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
@@ -1957,6 +1959,8 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
 
     // Check the header
     if (block.IsProofOfWork()) {
+        printf("At line 1962 ******************");
+         printf("-----main.cpp-----line-----1963----- block.nBits=%d\n", block.nBits);
         if (!CheckProofOfWork(block.GetHash(), block.nBits))
             return error("ReadBlockFromDisk : Errors in block header");
     }
@@ -1995,7 +1999,7 @@ double ConvertBitsToDouble(unsigned int nBits)
     return dDiff;
 }
 
-int64_t GetBlockValue(int nHeight)
+int64_t GetBlockValue(int nHeight, unsigned int masternodeLevel)
 {
     if (Params().NetworkID() == CBaseChainParams::TESTNET) {
         if (nHeight < 200 && nHeight > 0)
@@ -2011,20 +2015,22 @@ int64_t GetBlockValue(int nHeight)
     int64_t nSubsidy = 0;
     if (nHeight == 0) {
         nSubsidy = 200000 * COIN;
-    } else if (nHeight >= 553600){
-        nSubsidy = 8 * COIN;
-    } else if (nHeight >= 290800){
-        nSubsidy = 6 * COIN;
-    } else if (nHeight >= 28000){
-        nSubsidy = 2 * COIN;
-    } else {
+    }else if (nHeight >= 39000){
+
+        switch(masternodeLevel){
+            case 1: return nSubsidy = 8 * COIN;
+            case 2: return nSubsidy = 6 * COIN;
+            case 3: return nSubsidy = 2 * COIN;
+            case 4: return nSubsidy = 1 * COIN;
+        }
+    }else {
         nSubsidy = 1 * COIN;
     }
     return nSubsidy;
 }
 
-
-int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCount, bool isZEPGStake)
+// Commented as created new API for GetMasternodePayment with multitier
+/*int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCount, bool isZEPGStake)
 {
     int64_t ret = 0;
 
@@ -2037,19 +2043,43 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCou
         ret = 0;
     } else if (nHeight < 10001) {
         ret = blockValue * 60 / 100;
-    } else if (nHeight >= 553600) {
-        ret = blockValue * 94.35 / 100;
-    } else if (nHeight >= 290800) {
-        ret = blockValue * 85.8 / 100;
-    } else if (nHeight >= 28000) {
-        ret = blockValue * 72.4 / 100;
     } else {
         ret = blockValue * 848 / 1000;
     }
 
     return ret;
 }
+*/
 
+// Added for Multitier-Architecture Updation
+int64_t GetMasternodePayment(int nHeight, unsigned masternodeLevel, int64_t blockValue,int nMasternodeCount, bool isZEPGStake)
+{
+//    if (nHeight <= Params().StartMNPaymentsBlock())
+//        return 0;
+    int64_t ret = 0;
+    if (Params().NetworkID() == CBaseChainParams::TESTNET) {
+        if (nHeight < 200)
+            return 0;
+    }
+    if (nHeight <= Params().LAST_POW_BLOCK()) {
+        ret = 0;
+    }
+    else if (nHeight < 10001) {
+        ret = blockValue * 60 / 100;
+    }
+    else if (nHeight >= Params().EnforMultiTierMasternode()) {
+        switch(masternodeLevel) {
+            case 1: return blockValue * 0.098;
+            case 2: return blockValue * 0.35;
+            case 3: return blockValue * 0.51;
+        }
+    }
+    else {
+        ret = blockValue * 848 / 1000;
+    }
+
+    return ret;
+}
 int64_t GetDevelopersPayment(int nHeight, int64_t blockValue, bool isZEPGStake) {
     int64_t ret = 0;
 
@@ -2060,12 +2090,14 @@ int64_t GetDevelopersPayment(int nHeight, int64_t blockValue, bool isZEPGStake) 
         ret = 0.0;
     } else if (nHeight < 10001) {
         ret = blockValue * 398 / 1000;
-    } else if (nHeight >= 28000) {
-        ret = blockValue * 27.5 / 100;
-    } else {
-        ret = blockValue * 15 / 100;
     }
 
+    else if (nHeight < Params().EnforMultiTierMasternode()){  // Added for Multitier-Architecture Updation so that before multitier activation developers get old payment
+        ret = blockValue * 15 / 100;
+    }
+    else {
+        ret = blockValue * 55 / 1000;   //Once Masternode gets activated developers rewards becomes .55 epg
+        }
     return ret;
 }
 
@@ -2073,14 +2105,20 @@ bool IsInitialBlockDownload()
 {
     LOCK(cs_main);
     if (fImporting || fReindex || fVerifyingBlocks || chainActive.Height() < Checkpoints::GetTotalBlocksEstimate())
+    {
         return true;
+    }
     static bool lockIBDState = false;
     if (lockIBDState)
+    {
         return false;
+    }
     bool state = (chainActive.Height() < pindexBestHeader->nHeight - 24 * 6 ||
             pindexBestHeader->GetBlockTime() < GetTime() - nMaxTipAge);
     if (!state)
+    {
         lockIBDState = true;
+    }
     return state;
 }
 
@@ -2319,7 +2357,7 @@ CAmount GetInvalidUTXOValue()
     return nValue;
 }
 
-bool CheckInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck>* pvChecks)
+bool CheckInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck>* pvChecks , bool isMasternode)
 {
     if (!tx.IsCoinBase() && !tx.HasZerocoinSpendInputs()) {
         if (pvChecks)
@@ -2347,6 +2385,15 @@ bool CheckInputs(const CTransaction& tx, CValidationState& state, const CCoinsVi
                     return state.Invalid(
                         error("CheckInputs() : tried to spend coinbase at depth %d, coinstake=%d", nSpendHeight - coins->nHeight, coins->IsCoinStake()),
                         REJECT_INVALID, "bad-txns-premature-spend-of-coinbase");
+            }
+
+            // if prev is collateral amount, check that it's matured
+            if (!isMasternode && (coins->vout[prevout.n].nValue == 550 * COIN || coins->vout[prevout.n].nValue == 1000 * COIN || coins->vout[prevout.n].nValue == 2500 * COIN || coins->vout[prevout.n].nValue == 3500 * COIN || coins->vout[prevout.n].nValue == 250 * COIN  ))
+            {
+                if (nSpendHeight - coins->nHeight <  (coins->nHeight +Params().COLLATERAL_MATURITY()) && nSpendHeight > Params().CollateralMaturityEnforcementHeight())
+                    return state.Invalid(
+                             error("CheckInputs() : tried to spend collateral at depth %d", nSpendHeight - coins->nHeight),
+                             REJECT_INVALID, "bad-txns-premature-spend-of-collateral");
             }
 
             // Check for negative or overflow input values
@@ -4989,13 +5036,21 @@ bool TestBlockValidity(CValidationState& state, const CBlock& block, CBlockIndex
 
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, pindexPrev))
+    {
         return false;
+    }
     if (!CheckBlock(block, state, fCheckPOW, fCheckMerkleRoot))
+    {
         return false;
+    }
     if (!ContextualCheckBlock(block, state, pindexPrev))
+    {
         return false;
+    }
     if (!ConnectBlock(block, state, &indexDummy, viewNew, true))
+    {
         return false;
+    }
     assert(state.IsValid());
 
     return true;

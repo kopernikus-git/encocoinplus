@@ -458,7 +458,8 @@ std::vector<COutput> CActiveMasternode::SelectCoinsMasternode()
     }
 
     // Retrieve all possible outputs
-    pwalletMain->AvailableCoins(vCoins);
+    // 1.0.0.9 : only MN outputs, otherwise they will be rejected if not mature enough
+    pwalletMain->AvailableCoins(vCoins, true, NULL, false, ONLY_10000);
 
     // Lock MN coins from masternode.conf back if they where temporary unlocked
     if (!confLockedCoins.empty()) {
@@ -467,11 +468,33 @@ std::vector<COutput> CActiveMasternode::SelectCoinsMasternode()
     }
 
     // Filter
-    for (const COutput& out : vCoins) {
+    //Changes for multi-tier colletral
+    /*for (const COutput& out : vCoins) {
         if (out.tx->vout[out.i].nValue == (Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN)) { //exactly
             filteredCoins.push_back(out);
         }
+    }*/
+
+    for (const COutput& out : vCoins) {
+        int checkMasterNodeCollateralLevel = 0;
+        checkMasterNodeCollateralLevel = (Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN);
+        if (checkMasterNodeCollateralLevel == 1)
+        {
+            if(out.tx->vout[out.i].nValue == 550 * COIN)
+                filteredCoins.push_back(out);
+        }
+        else if (checkMasterNodeCollateralLevel == 2)
+        {
+            if((out.tx->vout[out.i].nValue == 1000 * COIN) || (out.tx->vout[out.i].nValue == 2500 * COIN) || (out.tx->vout[out.i].nValue == 3500 * COIN))
+                filteredCoins.push_back(out);
+        }
+        else if (checkMasterNodeCollateralLevel == 3)
+        {
+             if(out.tx->vout[out.i].nValue == 250 * COIN)
+                filteredCoins.push_back(out);
+        }
     }
+
     return filteredCoins;
 }
 

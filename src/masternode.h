@@ -127,12 +127,19 @@ public:
         MASTERNODE_MISSING
     };
 
+    // Added for Multitier-Architecture Updation
+    enum LevelValue : unsigned {
+        UNSPECIFIED = 0u,
+        MIN = 1u,
+        MAX = 3u,
+    };
     CTxIn vin;
     CService addr;
     CPubKey pubKeyCollateralAddress;
     CPubKey pubKeyMasternode;
     CPubKey pubKeyCollateralAddress1;
     CPubKey pubKeyMasternode1;
+    CAmount deposit;  // Added for Multitier-Architecture Updation
     int activeState;
     int64_t sigTime; //mnb message time
     int cacheInputAge;
@@ -152,6 +159,17 @@ public:
     CMasternode();
     CMasternode(const CMasternode& other);
 
+    // Added for Multitier-Architecture Updation Level method to check the available coins at that particular height
+    unsigned Level()
+    {
+        return Level(deposit, chainActive.Height());
+    }
+
+    static unsigned Level(CAmount vin_val, int blockHeight);  // Added for Multitier-Architecture Updation
+    static unsigned Level(const CTxIn& vin, int blockHeight); // Added for Multitier-Architecture Updation
+
+    static bool IsDepositCoins(CAmount);                      // Added for Multitier-Architecture Updation
+    static bool IsDepositCoins(const CTxIn& vin, CAmount& vin_val); // Added for Multitier-Architecture Updation
     // override CSignedMessage functions
     uint256 GetSignatureHash() const override;
     std::string GetStrMessage() const override;
