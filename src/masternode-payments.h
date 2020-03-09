@@ -60,6 +60,8 @@ class CMasternodePayee
 {
 public:
     CScript scriptPubKey;
+    unsigned masternodeLevel; // Added for Multitier-Architecture Updation
+
     int nVotes;
 
     CMasternodePayee()
@@ -72,6 +74,15 @@ public:
     {
         scriptPubKey = payee;
         nVotes = nVotesIn;
+    }
+
+    // Added for Multitier-Architecture Updation
+
+    CMasternodePayee(unsigned masternodeLevelIn, CScript payee, int nVotesIn)
+    {
+        scriptPubKey = payee;
+        nVotes = nVotesIn;
+        masternodeLevel = masternodeLevelIn;
     }
 
     ADD_SERIALIZE_METHODS;
@@ -102,21 +113,41 @@ public:
         vecPayments.clear();
     }
 
-    void AddPayee(CScript payeeIn, int nIncrement)
+    // Commented the previous implementation to update for multi-tier architecture
+    /*void AddPayee(unsigned masternodeLevel, CScript payeeIn, int nIncrement)
+    {
+        LOCK(cs_vecPayments);
+
+        auto payee = std::find_if(vecPayments.begin(), vecPayments.end(), [&payeeIn](const CMasternodePayee& p){
+            return p.scriptPubKey == payeeIn;
+        });
+
+        if(payee == vecPayments.end())
+            vecPayments.emplace_back(masternodeLevel, payeeIn, nIncrement);
+        else
+            payee->nVotes += nIncrement;
+    }*/
+
+    // Added for Multitier-Architecture Updation
+
+    void AddPayee(unsigned masternodeLevel,CScript payeeIn, int nIncrement)
     {
         LOCK(cs_vecPayments);
 
         for (CMasternodePayee& payee : vecPayments) {
             if (payee.scriptPubKey == payeeIn) {
                 payee.nVotes += nIncrement;
+                payee.masternodeLevel = masternodeLevel;
                 return;
             }
         }
 
-        CMasternodePayee c(payeeIn, nIncrement);
+        CMasternodePayee c(masternodeLevel,payeeIn, nIncrement);
         vecPayments.push_back(c);
     }
 
+
+    // Commented the previous implementation to update for multi-tier architecture
     bool GetPayee(CScript& payee)
     {
         LOCK(cs_vecPayments);
@@ -130,6 +161,30 @@ public:
         }
 
         return (nVotes > -1);
+    }
+
+    // Added for Multitier-Architecture Updation
+    bool GetPayee(unsigned masternodeLevel, CScript& payee) const
+    {
+        LOCK(cs_vecPayments);
+
+        auto payment = vecPayments.cend();
+
+        for(auto p = vecPayments.cbegin(), e = vecPayments.cend(); p != e; ++p) {
+
+            if(p->masternodeLevel != masternodeLevel)
+                continue;
+
+            if(payment == vecPayments.cend() || p->nVotes > payment->nVotes)
+                payment = p;
+        };
+
+        if(payment == vecPayments.cend())
+            return false;
+
+        payee = payment->scriptPubKey;
+
+        return true;
     }
 
     bool HasPayeeWithVotes(CScript payee, int nVotesReq)
@@ -163,20 +218,25 @@ public:
     CTxIn vinMasternode;
     int nBlockHeight;
     CScript payee;
+    unsigned payeeLevel; // Added for Multitier-Architecture Updation
 
     CMasternodePaymentWinner() :
         CSignedMessage(),
         vinMasternode(),
         nBlockHeight(0),
         payee()
-    {}
+    {
+        payeeLevel = CMasternode::LevelValue::UNSPECIFIED; // Added for Multitier-Architecture Updation
+    }
 
     CMasternodePaymentWinner(CTxIn vinIn) :
         CSignedMessage(),
         vinMasternode(vinIn),
         nBlockHeight(0),
         payee()
-    {}
+    {
+        payeeLevel = CMasternode::LevelValue::UNSPECIFIED; //// Added for Multitier-Architecture Updation
+    }
 
     uint256 GetHash() const;
 
@@ -188,9 +248,15 @@ public:
     bool IsValid(CNode* pnode, std::string& strError);
     void Relay();
 
-    void AddPayee(CScript payeeIn)
+    /*void AddPayee(CScript payeeIn)
     {
         payee = payeeIn;
+    }*/
+
+    void AddPayee(CScript payeeIn, unsigned payeeLevelIn)
+    {
+        payee = payeeIn;
+        payeeLevel = payeeLevelIn;
     }
 
     ADD_SERIALIZE_METHODS;
@@ -257,10 +323,11 @@ public:
     void CleanPaymentList();
     int LastPayment(CMasternode& mn);
 
-    bool GetBlockPayee(int nBlockHeight, CScript& payee);
+    //bool GetBlockPayee(int nBlockHeight, CScript& payee);
+    bool GetBlockPayee(int nBlockHeight, unsigned masternodeLevel, CScript& payee);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
-    bool IsScheduled(CMasternode& mn, int nNotBlockHeight);
-
+    //bool IsScheduled(CMasternode& mn, int nNotBlockHeight);
+    bool IsScheduled(CMasternode& mn, int nSameLevelMNCount, int nNotBlockHeight) const;
     bool CanVote(COutPoint outMasternode, int nBlockHeight)
     {
         LOCK(cs_mapMasternodePayeeVotes);

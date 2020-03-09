@@ -16,7 +16,8 @@
 
 #include <boost/assign/list_of.hpp>
 #include <limits>
-
+#include "tinyformat.h"
+#include "streams.h"
 
 struct SeedSpec6 {
     uint8_t addr[16];
@@ -119,6 +120,9 @@ bool CChainParams::HasStakeMinAgeOrDepth(const int contextHeight, const uint32_t
     return (contextHeight - utxoFromBlockHeight >= nStakeMinDepth);
 }
 
+
+
+
 int CChainParams::FutureBlockTimeDrift(const int nHeight) const
 {
     if (IsTimeProtocolV2(nHeight))
@@ -179,7 +183,10 @@ public:
         nMasternodeCountDrift = 20;
         nMaxMoneyOut = 40000000 * COIN;
         nMinColdStakingAmount = 1 * COIN;
-
+        nEnforMultiTierMasternode = 39000;          // Added for Multitier-Architecture Updation
+	    nCollateralMaturity = 210240;                // Block numbers created in one year
+        nCollateralMaturityEnforcementHeight = 39000;
+        nLockedCollateralRemainTime = 0;
         nMasternodeCollateral = 200;
         strDevFundAddress = "7Ns4orZTzEqrVPSPE4JhcGHhoEsqSnrYg7";
         nStakeInputMinimal = 75 * COIN;
@@ -250,10 +257,11 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("173.199.119.55", "173.199.119.55"));     // Primary DNS Seeder 
-        vSeeds.push_back(CDNSSeedData("149.28.34.121", "149.28.34.121")); 
-        vSeeds.push_back(CDNSSeedData("149.28.235.72", "149.28.235.72"));
-        
+        //vSeeds.push_back(CDNSSeedData("173.199.119.55", "173.199.119.55"));     // Primary DNS Seeder
+        //vSeeds.push_back(CDNSSeedData("149.28.34.121", "149.28.34.121"));
+        //vSeeds.push_back(CDNSSeedData("149.28.235.72", "149.28.235.72"));
+        vFixedSeeds.clear();
+        vSeeds.clear();
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 15);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 13);
@@ -274,6 +282,7 @@ public:
         fSkipProofOfWorkCheck = false;
         fTestnetToBeDeprecatedFieldRPC = false;
         fHeadersFirstSyncingActive = false;
+
 
         nPoolMaxTransactions = 3;
         nBudgetCycleBlocks = 43200; //!< Amount of blocks in a months period of time (using 1 minutes per) = (60*24*30)
@@ -304,27 +313,51 @@ public:
 
     int GetRequiredMasternodeCollateral(int nTargetHeight) const
     {
-        if(nTargetHeight > 10000  ) {
-            return 550;
-        } else if(nTargetHeight > 553600) {
-            return 3500;
-        } else if(nTargetHeight > 290800) {
-            return 2500;
-        } else if(nTargetHeight > 28000) {
-            return 1000;
+        if(nTargetHeight >=10000 && nTargetHeight < 39000 )
+        {
+            return 1;
+        } 
+        else if (nTargetHeight >= 39000 )
+        {
+            return 2;
         }
-
-        return 250;
+        else
+        {
+            return 3;
+        }
     }
-    
+
+    void  show_Collateral_Locked_Remaining_Time(int LockedTime)
+    { 
+        nLockedCollateralRemainTime = LockedTime ;
+    }
+
+   /* int GetRequiredMasternodeCollateral(int nTargetHeight) const
+    {
+        if(nTargetHeight >=10000 && nTargetHeight < 39000 ) {
+            return 550;
+        } else if (nTargetHeight >= 39000 &&  nTargetHeight < 290800){
+            return 1000;
+        } else if (nTargetHeight > 290800 && nTargetHeight < 553600){
+            return 2500;
+        } else if(nTargetHeight >= 553600){
+            return 3500;
+        }
+        return 250;
+    }*/
+
     CAmount StakingMinInput(int nTargetHeight) const
     {
         if(nTargetHeight < 10000) {
             return 0 * COIN;
         }
-        else
+        else if (nTargetHeight >= 10000 && nTargetHeight < 39000)
         {
             return 10 * COIN;
+        }
+        else
+        {
+            return 1 * COIN;
         }
     }
 
@@ -379,7 +412,8 @@ public:
         nBIP65ActivationHeight = 851019;
         // Activation height for TimeProtocolV2, Blocks V7 and newMessageSignatures
         nBlockTimeProtocolV2 = 100;
-
+        nCollateralMaturity = 300;
+        nCollateralMaturityEnforcementHeight = 1000;
         // Public coin spend enforcement
         nPublicZCSpends = 100;
 
@@ -579,6 +613,7 @@ public:
     virtual void setDefaultConsistencyChecks(bool afDefaultConsistencyChecks) { fDefaultConsistencyChecks = afDefaultConsistencyChecks; }
     virtual void setAllowMinDifficultyBlocks(bool afAllowMinDifficultyBlocks) { fAllowMinDifficultyBlocks = afAllowMinDifficultyBlocks; }
     virtual void setSkipProofOfWorkCheck(bool afSkipProofOfWorkCheck) { fSkipProofOfWorkCheck = afSkipProofOfWorkCheck; }
+    virtual void setnEnforMultiTierMasternode(int afMultiTierMasternode){nEnforMultiTierMasternode = afMultiTierMasternode ;} // Added for Multitier-Architecture Updation
 };
 static CUnitTestParams unitTestParams;
 

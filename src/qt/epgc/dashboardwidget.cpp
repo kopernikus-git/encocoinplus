@@ -11,6 +11,7 @@
 #include "walletmodel.h"
 #include "clientmodel.h"
 #include "optionsmodel.h"
+//#include "spork.h"
 #include "utiltime.h"
 #include <QPainter>
 #include <QModelIndex>
@@ -53,6 +54,12 @@ DashboardWidget::DashboardWidget(EPGCGUI* parent) :
     /* Subtitle */
     ui->labelSubtitle->setText(tr("You can view your account's history"));
     setCssSubtitleScreen(ui->labelSubtitle);
+
+
+    //information block update
+    timerinfo_mn = new QTimer(this);
+    connect(timerinfo_mn, SIGNAL(timeout()), this, SLOT(updateMasternodeInfo()));
+    timerinfo_mn->start(1000);
 
     // Staking Information
     ui->labelMessage->setText(tr("Amount of EPG staked and/or generated from Masternodes."));
@@ -129,27 +136,27 @@ DashboardWidget::DashboardWidget(EPGCGUI* parent) :
     ui->listTransactions->setUniformItemSizes(true);
 
     // Sync Warning
-    ui->layoutWarning->setVisible(true);
-    ui->lblWarning->setText(tr("Please wait until the wallet is fully synced to see your correct balance"));
-    setCssProperty(ui->lblWarning, "text-warning");
-    setCssProperty(ui->imgWarning, "ic-warning");
+    //ui->layoutWarning->setVisible(true);
+    //ui->lblWarning->setText(tr("Please wait until the wallet is fully synced to see your correct balance"));
+    //setCssProperty(ui->lblWarning, "text-warning");
+    //setCssProperty(ui->imgWarning, "ic-warning");
 
     //Empty List
-    ui->emptyContainer->setVisible(false);
-    setCssProperty(ui->pushImgEmpty, "img-empty-transactions");
+    //ui->emptyContainer->setVisible(false);
+    //setCssProperty(ui->pushImgEmpty, "img-empty-transactions");
 
-    ui->labelEmpty->setText(tr("No transactions yet"));
-    setCssProperty(ui->labelEmpty, "text-empty");
-    setCssProperty(ui->chartContainer, "container-chart");
-    setCssProperty(ui->pushImgEmptyChart, "img-empty-staking-on");
+    //ui->labelEmpty->setText(tr("No transactions yet"));
+    //setCssProperty(ui->labelEmpty, "text-empty");
+    //setCssProperty(ui->chartContainer, "container-chart");
+    //setCssProperty(ui->pushImgEmptyChart, "img-empty-staking-on");
 
     ui->btnHowTo->setText(tr("How to get EPG"));
     setCssBtnSecondary(ui->btnHowTo);
 
 
-    setCssProperty(ui->labelEmptyChart, "text-empty");
-    ui->labelMessageEmpty->setText(tr("You can verify the staking activity in the status bar at the top right of the wallet.\nIt will start automatically as soon as the wallet has enough confirmations on any unspent balances, and the wallet has synced."));
-    setCssSubtitleScreen(ui->labelMessageEmpty);
+    //setCssProperty(ui->labelEmptyChart, "text-empty");
+    //ui->labelMessageEmpty->setText(tr("You can verify the staking activity in the status bar at the top right of the wallet.\nIt will start automatically as soon as the wallet has enough confirmations on any unspent balances, and the wallet has synced."));
+    //setCssSubtitleScreen(ui->labelMessageEmpty);
 
     // Chart State
     ui->layoutChart->setVisible(false);
@@ -170,11 +177,11 @@ bool hasCharts = false;
     connect(ui->pushButtonAll, &QPushButton::clicked, [this](){setChartShow(ALL);});
 #endif
 
-    if (hasCharts) {
+   /* if (hasCharts) {
         ui->labelEmptyChart->setText(tr("You have no staking rewards"));
     } else {
-        ui->labelEmptyChart->setText(tr("No charts library"));
-    }
+        //ui->labelEmptyChart->setText(tr("No charts library"));
+    }*/
 }
 
 void DashboardWidget::handleTransactionClicked(const QModelIndex &index){
@@ -194,6 +201,88 @@ void DashboardWidget::handleTransactionClicked(const QModelIndex &index){
     ui->listTransactions->setFocus();
     dialog->deleteLater();
 }
+
+double roi1, roi2, roi3;
+void DashboardWidget::updateMasternodeInfo()
+{
+  int CurrentBlock = clientModel->getNumBlocks();
+
+  if (masternodeSync.IsBlockchainSynced() && masternodeSync.IsSynced())
+  {
+
+   int mn1=0;
+   int mn2=0;
+   int mn3=0;
+   int totalmn=0;
+   std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeMap();
+    for(auto& mn : vMasternodes)
+    {
+       switch ( mn.Level())
+       {
+           case 1:
+           mn1++;break;
+           case 2:
+           mn2++;break;
+           case 3:
+           mn3++;break;
+       }
+
+    }
+    totalmn=mn1+mn2+mn3;
+    ui->labelMnTotal_Value->setText(QString::number(totalmn));
+    int maxMnValue = std::max( { mn1, mn2, mn3}, [](const int& s1, const int& s2) { return s1 < s2; });
+
+    ui->graphMN1->setMaximum(maxMnValue);
+    ui->graphMN2->setMaximum(maxMnValue);
+    ui->graphMN3->setMaximum(maxMnValue);
+
+    ui->graphMN1->setValue(mn1);
+    ui->graphMN2->setValue(mn2);
+    ui->graphMN3->setValue(mn3);
+
+
+    // TODO: need a read actual 24h blockcount from chain
+    int BlockCount24h = 500;
+
+    // update ROI
+    double BlockReward = GetBlockValue(CurrentBlock);
+    BlockReward -= BlockReward * 10019 / 100;
+    (mn1==0) ? roi1 = 0 : roi1 = (GetMasternodePayment(ActiveProtocol(), 1, BlockReward,3,false)*BlockCount24h)/mn1/COIN;
+    (mn2==0) ? roi2 = 0 : roi2 = (GetMasternodePayment(ActiveProtocol(), 2, BlockReward,3,false)*BlockCount24h)/mn2/COIN;
+    (mn3==0) ? roi3 = 0 : roi3 = (GetMasternodePayment(ActiveProtocol(), 3, BlockReward,3,false)*BlockCount24h)/mn3/COIN;
+
+    if (CurrentBlock >= 0) {
+        ui->roi_11->setText(mn1==0 ? "-" : QString::number(roi1,'f',0).append("  |"));
+        ui->roi_21->setText(mn2==0 ? "-" : QString::number(roi2,'f',0).append("  |"));
+        ui->roi_31->setText(mn3==0 ? "-" : QString::number(roi3,'f',0).append("  |"));
+
+        ui->roi_12->setText(mn1==0 ? " " : QString::number(  1000/roi1,'f',1).append(" days"));
+        ui->roi_22->setText(mn2==0 ? " " : QString::number( 2500/roi2,'f',1).append(" days"));
+        ui->roi_32->setText(mn3==0 ? " " : QString::number( 3500/roi3,'f',1).append(" days"));
+
+    }
+    CAmount tNodesSumm = mn1*1000 + mn2*2500 + mn3*3500;
+    CAmount tMoneySupply = chainActive.Tip()->nMoneySupply;
+    double tLocked = tMoneySupply > 0 ? 100 * static_cast<double>(tNodesSumm) / static_cast<double>(tMoneySupply / COIN) : 0;
+    int locked_Colletral_Remaining_Blocks = Params().set_Collateral_Locked_Remaining_Time();
+    ui->label_LockedCoin_value->setText(QString::number(tNodesSumm).append(" (" + QString::number(tLocked,'f',1) + "%)"));
+    ui->label_LockedCoin_Time->setText(QString::number(locked_Colletral_Remaining_Blocks));
+
+    // update timer
+    if (timerinfo_mn->interval() == 1000)
+            timerinfo_mn->setInterval(10000);
+  }
+
+  // update collateral info
+  if (CurrentBlock >= 0) {
+      ui->label_lcolat->setText("1000 EPG");
+      ui->label_mcolat->setText("2500 EPG");
+      ui->label_fcolat->setText("3500 EPG");
+  }
+
+}
+
+
 
 void DashboardWidget::loadWalletModel(){
     if (walletModel && walletModel->getOptionsModel()) {
@@ -217,7 +306,7 @@ void DashboardWidget::loadWalletModel(){
             ui->comboBoxSort->setVisible(false);
         }
 
-        connect(ui->pushImgEmpty, SIGNAL(clicked()), window, SLOT(openFAQ()));
+        //connect(ui->pushImgEmpty, SIGNAL(clicked()), window, SLOT(openFAQ()));
         connect(ui->btnHowTo, SIGNAL(clicked()), window, SLOT(openFAQ()));
         connect(txModel, &TransactionTableModel::txArrived, this, &DashboardWidget::onTxArrived);
 
@@ -407,7 +496,7 @@ void DashboardWidget::showHideEmptyChart(bool showEmpty, bool loading, bool forc
     ui->pushButtonMonth->setEnabled(invLoading);
     ui->pushButtonAll->setEnabled(invLoading);
     ui->pushButtonYear->setEnabled(invLoading);
-    ui->labelEmptyChart->setText(loading ? tr("Loading chart..") : tr("You have no staking rewards"));
+    //ui->labelEmptyChart->setText(loading ? tr("Loading chart..") : tr("You have no staking rewards"));
 }
 
 void DashboardWidget::initChart() {

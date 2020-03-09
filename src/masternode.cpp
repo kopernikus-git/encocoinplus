@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Dash developers
+    // Copyright (c) 2014-2015 The Dash developers
 // Copyright (c) 2015-2019 The PIVX developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -209,10 +209,59 @@ void CMasternode::Check(bool forceCheck)
         return;
     }
 
-    if (!unitTest) {
+    /*if (!unitTest) {
         CValidationState state;
         CMutableTransaction tx = CMutableTransaction();
         CTxOut vout = CTxOut((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN, obfuScationPool.collateralPubKey);
+        tx.vin.push_back(vin);
+        tx.vout.push_back(vout);
+
+        {
+            TRY_LOCK(cs_main, lockMain);
+            if (!lockMain) return;
+
+            if (!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)) {
+                activeState = MASTERNODE_VIN_SPENT;
+                return;
+            }
+        }
+    }*/
+    // Added  Multi-yier masternode collateral
+
+   if (!unitTest) {
+        CTransaction txVin;
+        uint256 hash;
+        CAmount masterNodeVout = 0;
+        int checkMasterNodeCollateralLevel = 0;
+        checkMasterNodeCollateralLevel = ((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN);
+        if(GetTransaction(vin.prevout.hash, txVin, hash, true)) {
+            for (CTxOut out : txVin.vout) {
+                if (checkMasterNodeCollateralLevel == 1)
+                {
+                     masterNodeVout = 550 ;
+                }
+                else if (checkMasterNodeCollateralLevel == 2)
+                {
+                    if (out.nValue >550 * COIN && out.nValue <= 1000 * COIN)
+                    {
+                        masterNodeVout = 1000 ;
+                    }else if(out.nValue >1000 * COIN && out.nValue <= 2500 * COIN){
+                        masterNodeVout = 2500 ;
+                    }else if(out.nValue >2500 *COIN ){
+                        masterNodeVout = 3500 ;
+                    }else{
+                        masterNodeVout = 3500 ;
+                    }
+                }
+                else if (checkMasterNodeCollateralLevel == 3){
+                    masterNodeVout = 250 ;
+                }
+            }
+         }
+
+        CValidationState state;
+        CMutableTransaction tx = CMutableTransaction();
+        CTxOut vout = CTxOut(masterNodeVout * COIN, obfuScationPool.collateralPubKey);
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 
@@ -268,7 +317,8 @@ int64_t CMasternode::GetLastPaid()
 
     const CBlockIndex* BlockReading = chainActive.Tip();
 
-    int nMnCount = mnodeman.CountEnabled() * 1.25;
+    //int nMnCount = mnodeman.CountEnabled() * 1.25;
+    int nMnCount = int(mnodeman.CountEnabled(Level()) * 1.25); // // Added for Multitier-Architecture Updation , added level
     int n = 0;
     for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
         if (n >= nMnCount) {
@@ -344,6 +394,60 @@ bool CMasternode::IsInputAssociatedWithPubkey(int nTargetHeight) const
     return false;
 }
 
+// Added for Multitier-Architecture Updation
+
+unsigned CMasternode::Level(CAmount vin_val, int blockHeight)
+{
+    if (blockHeight >= Params().EnforMultiTierMasternode() ) {
+      switch(vin_val) {
+          case 1000 * COIN: return 1;
+          case 2500 * COIN: return 2;
+          case 3500 * COIN: return 3;
+      }
+    }
+    return 0;
+}
+
+// Added for Multitier-Architecture Updation
+
+unsigned CMasternode::Level(const CTxIn& vin, int blockHeight)
+{
+    CAmount vin_val;
+
+    if(!IsDepositCoins(vin, vin_val))
+        return LevelValue::UNSPECIFIED;
+
+    return Level(vin_val, blockHeight);
+}
+
+// Added for Multitier-Architecture Updation
+
+bool CMasternode::IsDepositCoins(CAmount vin_val)
+{
+    return Level(vin_val, chainActive.Height());
+}
+
+// Added for Multitier-Architecture Updation
+
+bool CMasternode::IsDepositCoins(const CTxIn& vin, CAmount& vin_val)
+{
+    CTransaction prevout_tx;
+    uint256      hashBlock = 0;
+
+    bool vin_valid =  GetTransaction(vin.prevout.hash, prevout_tx, hashBlock, true)
+                   && (vin.prevout.n < prevout_tx.vout.size());
+
+    if(!vin_valid)
+        return false;
+
+    CAmount vin_amount = prevout_tx.vout[vin.prevout.n].nValue;
+
+    if(!IsDepositCoins(vin_amount))
+        return false;
+
+    vin_val = vin_amount;
+    return true;
+}
 CMasternodeBroadcast::CMasternodeBroadcast() :
         CMasternode()
 { }
