@@ -33,7 +33,6 @@
 #include "txmempool.h"
 #include "uint256.h"
 #include "undo.h"
-
 #include <algorithm>
 #include <exception>
 #include <map>
@@ -242,9 +241,8 @@ bool GetOutput(const uint256& hash, unsigned int index, CValidationState& state,
 // ***TODO***
 double ConvertBitsToDouble(unsigned int nBits);
 //int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCount, bool isZEPGStake);
-// Added for Multitier-Architecture Updation added masternodeLevel to check the masternodes
-int64_t GetMasternodePayment(int nHeight, unsigned masternodeLevel, int64_t blockValue ,int nMasternodeCount, bool isZEPGStake); 
-
+//Added for Multitier-Architecture Updation added masternodeLevel to check the masternodes
+int64_t GetMasternodePayment(int nHeight, unsigned masternodeLevel, int64_t blockValue ,int nMasternodeCount, bool isZEPGStake);
 int64_t GetDevelopersPayment(int nHeight, int64_t blockValue, bool isZEPGStake);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, bool fProofOfStake);
 

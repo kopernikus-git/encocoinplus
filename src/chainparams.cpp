@@ -59,7 +59,7 @@ static Checkpoints::MapCheckpoints mapCheckpoints =
     (15100, uint256("0x889081c8803082944ec707bfdbad1b5819d4b8dc918e44e25e406b87714bd41a"))
     (15589, uint256("0x7385f76e0dd7d33a2b94aa9abfca67bb028865196be378bfe72beb1f6331d0cb"))
     (20104, uint256("0xa0ee7c4e71b75bd086c5e7ffdde679bda468ee56c38d41fde1c118c6879f3631"))
-    ; 
+    ;
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
     1580855918, // * UNIX timestamp of last checkpoint block
@@ -113,10 +113,10 @@ bool CChainParams::HasStakeMinAgeOrDepth(const int contextHeight, const uint32_t
 
 
     bool StakeMinAgOk = (utxoFromBlockTime + nStakeMinAge <= contextTime);
-    
+
     if (!StakeMinAgOk)
         return false;
-    
+
     return (contextHeight - utxoFromBlockHeight >= nStakeMinDepth);
 }
 
@@ -313,7 +313,7 @@ public:
         if(nTargetHeight >=10000 && nTargetHeight < 39000 )
         {
             return 1;
-        } 
+        }
         else if (nTargetHeight >= 39000 )
         {
             return 2;
@@ -470,16 +470,16 @@ public:
 
         return 250;
     }
-    
+
     CAmount StakingMinInput(int nTargetHeight) const
     {
         if(nTargetHeight > 2000) {
             return 30 * COIN;
         }
-        
+
         return 0;
     }
-    
+
     const Checkpoints::CCheckpointData& Checkpoints() const
     {
         return dataTestnet;
