@@ -427,10 +427,34 @@ void MasterNodesWidget::onDeleteMNClicked(){
 
 void MasterNodesWidget::onCreateMNClicked(){
     if(verifyWalletUnlocked()) {
-        if(walletModel->getBalance() <= (COIN * walletModel->getRequiredMasternodeCollateral())){
+        int masterNodeCollateralLevel = 0;
+        //CAmount mastrnodeBalance = 0;
+        masterNodeCollateralLevel = walletModel->getRequiredMasternodeCollateral();
+        if(masterNodeCollateralLevel == 1)
+        {
+           if(walletModel->getBalance() != (COIN * 550))
+           {
             inform(tr("Not enough balance to create a masternode, 550 EPG required."));
             return;
+           }
         }
+        else if(masterNodeCollateralLevel == 2)
+        {
+           if(!(walletModel->getBalance() == (COIN * 1000) || walletModel->getBalance() == (COIN * 2500) || walletModel->getBalance() == (COIN * 3500)))
+           {
+            inform(tr("Not enough balance to create a masternode, 550 EPG required."));
+            return;
+           }
+        }
+        else if(masterNodeCollateralLevel == 3)
+        {
+            if(walletModel->getBalance() != (COIN * 250))
+           {
+            inform(tr("Not enough balance to create a masternode, 550 EPG required."));
+            return;
+           }
+        }
+
         showHideOp(true);
         MasterNodeWizardDialog *dialog = new MasterNodeWizardDialog(walletModel, window);
         if(openDialogWithOpaqueBackgroundY(dialog, window, 5, 7)) {

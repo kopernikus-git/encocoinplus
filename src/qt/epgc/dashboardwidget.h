@@ -112,6 +112,7 @@ public slots:
      * The new items are those between start and end inclusive, under the given parent item.
     */
     void processNewTransaction(const QModelIndex& parent, int start, int /*end*/);
+
 signals:
     /** Notify that a new transaction appeared */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address);
@@ -122,6 +123,7 @@ private slots:
     void onSortTypeChanged(const QString& value);
     void updateDisplayUnit();
     void showList();
+    void updateMasternodeInfo();
     void onTxArrived(const QString& hash, const bool& isCoinStake, const bool& isCSAnyType);
 
 #ifdef USE_QTCHARTS
@@ -133,6 +135,8 @@ private slots:
 #endif
 
 private:
+    QTimer* timerinfo_mn;
+    QTimer* timerinfo_blockchain;
     Ui::DashboardWidget *ui;
     FurAbstractListItemDelegate* txViewDelegate;
     TransactionFilterProxy* filter;

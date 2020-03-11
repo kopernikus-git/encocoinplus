@@ -215,6 +215,12 @@ bool CMasternodeMan::Add(CMasternode& mn)
     return false;
 }
 
+std::vector<CMasternode> CMasternodeMan::GetFullMasternodeMap()
+{
+    LOCK(cs);
+    return vMasternodes;
+}
+
 void CMasternodeMan::AskForMN(CNode* pnode, CTxIn& vin)
 {
     std::map<COutPoint, int64_t>::iterator i = mWeAskedForMasternodeListEntry.find(vin.prevout);
@@ -375,8 +381,28 @@ int CMasternodeMan::stable_size ()
     return nStable_size;
 }
 
-int CMasternodeMan::CountEnabled(int protocolVersion)
+//Updated the API to count the enabled masternode
+int CMasternodeMan::CountEnabled(unsigned masternodeLevel, int protocolVersion)
 {
+
+
+    if(protocolVersion == -1)
+        protocolVersion = masternodePayments.GetMinMasternodePaymentsProto();
+
+    auto check_level = masternodeLevel != CMasternode::LevelValue::UNSPECIFIED;
+
+    return std::count_if(vMasternodes.begin(), vMasternodes.end(), [=](CMasternode& mn){
+
+        mn.Check();
+
+        if(check_level && masternodeLevel != mn.Level())
+            return false;
+
+        return mn.protocolVersion >= protocolVersion && mn.IsEnabled();
+    });
+
+//Commented the previous implementation
+/*
     int i = 0;
     protocolVersion = protocolVersion == -1 ? masternodePayments.GetMinMasternodePaymentsProto() : protocolVersion;
 
@@ -386,7 +412,7 @@ int CMasternodeMan::CountEnabled(int protocolVersion)
         i++;
     }
 
-    return i;
+    return i;*/
 }
 
 void CMasternodeMan::CountNetworks(int protocolVersion, int& ipv4, int& ipv6, int& onion)
@@ -474,7 +500,9 @@ CMasternode* CMasternodeMan::Find(const CPubKey& pubKeyMasternode)
 //
 // Deterministically select the oldest/best masternode to pay on the network
 //
-CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount)
+
+// Added for Multitier Updatio , added masternodelevel in API as parameter
+CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, unsigned masternodeLevel,bool fFilterSigTime, int& nCount)
 {
     LOCK(cs);
 
@@ -485,7 +513,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         Make a vector with all of the last paid times
     */
 
-    int nMnCount = CountEnabled();
+    int nMnCount = CountEnabled(masternodeLevel); // Added for Multitier Updatio , added masternodelevel in API as parameter
     for (CMasternode& mn : vMasternodes) {
         mn.Check();
         if (!mn.IsEnabled()) continue;
@@ -494,7 +522,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         if (mn.protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) continue;
 
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
-        if (masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
+        if (masternodePayments.IsScheduled(mn, nMnCount,nBlockHeight)) continue;   // Added for Multitier Updatio , added nMnCount in API as parameter
 
         //it's too new, wait for a cycle
         if (fFilterSigTime && mn.sigTime + (nMnCount * 2.6 * 60) > GetAdjustedTime()) continue;
@@ -508,7 +536,9 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     nCount = (int)vecMasternodeLastPaid.size();
 
     //when the network is in the process of upgrading, don't penalize nodes that recently restarted
-    if (fFilterSigTime && nCount < nMnCount / 3) return GetNextMasternodeInQueueForPayment(nBlockHeight, false, nCount);
+    if (fFilterSigTime && nCount < nMnCount / 3)
+        return GetNextMasternodeInQueueForPayment(nBlockHeight, masternodeLevel, false, nCount); // Added for Multitier Updatio , added masternodeLevel in API as parameter
+    // return GetNextMasternodeInQueueForPayment(nBlockHeight, false, nCount);
 
     // Sort them high to low
     sort(vecMasternodeLastPaid.rbegin(), vecMasternodeLastPaid.rend(), CompareLastPaid());
@@ -567,7 +597,41 @@ CMasternode* CMasternodeMan::FindRandomNotInVec(std::vector<CTxIn>& vecToExclude
     return NULL;
 }
 
-CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight, int minProtocol)
+// Added for Multitier-Architecture Updation
+
+CMasternode* CMasternodeMan::GetCurrentMasterNode(unsigned masternodeLevel, int mod, int64_t nBlockHeight, int minProtocol)
+{
+    int64_t score = 0;
+    CMasternode* winner = nullptr;
+
+    auto check_masternodeLevel = masternodeLevel != CMasternode::LevelValue::UNSPECIFIED;
+
+    // scan for winner
+    for(CMasternode& mn : vMasternodes) {
+        mn.Check();
+
+        if(check_masternodeLevel && mn.Level() != masternodeLevel)
+            continue;
+
+        if(mn.protocolVersion < minProtocol || !mn.IsEnabled())
+            continue;
+
+        // calculate the score for each Masternode
+        uint256 n  = mn.CalculateScore(mod, nBlockHeight);
+        int64_t n2 = n.GetCompact(false);
+
+        // determine the winner
+        if (n2 > score) {
+            score = n2;
+            winner = &mn;
+        }
+    }
+
+    return winner;
+}
+
+//Commented the pervious implementation to update for multi-tier architecture
+/*CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight, int minProtocol)
 {
     int64_t score = 0;
     CMasternode* winner = NULL;
@@ -589,7 +653,7 @@ CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight,
     }
 
     return winner;
-}
+}*/
 
 int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, int minProtocol, bool fOnlyActive)
 {
@@ -984,9 +1048,41 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         // make sure it's still unspent
         //  - this is checked later by .check() in many places and by ThreadCheckObfuScationPool()
 
+
+        // Added get balance to to set the collateral amount for particular transaction
+        CTransaction txVin;
+        uint256 hash;
+        CAmount masterNodeVout = 0;
+        int checkMasterNodeCollateralLevel = 0;
+        checkMasterNodeCollateralLevel = ((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN);
+        if(GetTransaction(vin.prevout.hash, txVin, hash, true)) {
+            for (CTxOut out : txVin.vout) {
+                if (checkMasterNodeCollateralLevel == 1)
+                {
+                     masterNodeVout = 550 ;
+                }
+                else if (checkMasterNodeCollateralLevel == 2)
+                {
+                    if (out.nValue >550 * COIN && out.nValue <= 1000 * COIN)
+                    {
+                        masterNodeVout = 1000 ;
+                    }else if(out.nValue >1000 * COIN && out.nValue <= 2500 * COIN){
+                        masterNodeVout = 2500 ;
+                    }else if(out.nValue >2500 *COIN ){
+                        masterNodeVout = 3500 ;
+                    }else{
+                        masterNodeVout = 3500 ;
+                    }
+                }
+                else if (checkMasterNodeCollateralLevel == 3){
+                    masterNodeVout = 250 ;
+                }
+            }
+         }
+
         CValidationState state;
         CMutableTransaction tx = CMutableTransaction();
-        CTxOut vout = CTxOut((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN, obfuScationPool.collateralPubKey);
+        CTxOut vout = CTxOut(masterNodeVout * COIN, obfuScationPool.collateralPubKey);
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 

@@ -16,7 +16,8 @@
 
 #include <boost/assign/list_of.hpp>
 #include <limits>
-
+#include "tinyformat.h"
+#include "streams.h"
 
 struct SeedSpec6 {
     uint8_t addr[16];
@@ -58,7 +59,7 @@ static Checkpoints::MapCheckpoints mapCheckpoints =
     (15100, uint256("0x889081c8803082944ec707bfdbad1b5819d4b8dc918e44e25e406b87714bd41a"))
     (15589, uint256("0x7385f76e0dd7d33a2b94aa9abfca67bb028865196be378bfe72beb1f6331d0cb"))
     (20104, uint256("0xa0ee7c4e71b75bd086c5e7ffdde679bda468ee56c38d41fde1c118c6879f3631"))
-    ; 
+    ;
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
     1580855918, // * UNIX timestamp of last checkpoint block
@@ -112,12 +113,15 @@ bool CChainParams::HasStakeMinAgeOrDepth(const int contextHeight, const uint32_t
 
 
     bool StakeMinAgOk = (utxoFromBlockTime + nStakeMinAge <= contextTime);
-    
+
     if (!StakeMinAgOk)
         return false;
-    
+
     return (contextHeight - utxoFromBlockHeight >= nStakeMinDepth);
 }
+
+
+
 
 int CChainParams::FutureBlockTimeDrift(const int nHeight) const
 {
@@ -179,7 +183,9 @@ public:
         nMasternodeCountDrift = 20;
         nMaxMoneyOut = 40000000 * COIN;
         nMinColdStakingAmount = 1 * COIN;
-
+        nEnforMultiTierMasternode = 39000;          // Added for Multitier-Architecture Updation
+        nCollateralMaturity = 210240;                // Block numbers created in one year
+        nCollateralMaturityEnforcementHeight = 39000;
         nMasternodeCollateral = 200;
         strDevFundAddress = "7Ns4orZTzEqrVPSPE4JhcGHhoEsqSnrYg7";
         nStakeInputMinimal = 75 * COIN;
@@ -250,10 +256,9 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("173.199.119.55", "173.199.119.55"));     // Primary DNS Seeder 
-        vSeeds.push_back(CDNSSeedData("149.28.34.121", "149.28.34.121")); 
+        vSeeds.push_back(CDNSSeedData("173.199.119.55", "173.199.119.55"));     // Primary DNS Seeder
+        vSeeds.push_back(CDNSSeedData("149.28.34.121", "149.28.34.121"));
         vSeeds.push_back(CDNSSeedData("149.28.235.72", "149.28.235.72"));
-        
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 15);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 13);
@@ -274,6 +279,7 @@ public:
         fSkipProofOfWorkCheck = false;
         fTestnetToBeDeprecatedFieldRPC = false;
         fHeadersFirstSyncingActive = false;
+
 
         nPoolMaxTransactions = 3;
         nBudgetCycleBlocks = 43200; //!< Amount of blocks in a months period of time (using 1 minutes per) = (60*24*30)
@@ -304,27 +310,46 @@ public:
 
     int GetRequiredMasternodeCollateral(int nTargetHeight) const
     {
-        if(nTargetHeight > 10000  ) {
-            return 550;
-        } else if(nTargetHeight > 553600) {
-            return 3500;
-        } else if(nTargetHeight > 290800) {
-            return 2500;
-        } else if(nTargetHeight > 28000) {
-            return 1000;
+        if(nTargetHeight >=10000 && nTargetHeight < 39000 )
+        {
+            return 1;
         }
-
-        return 250;
+        else if (nTargetHeight >= 39000 )
+        {
+            return 2;
+        }
+        else
+        {
+            return 3;
+        }
     }
-    
+
+   /* int GetRequiredMasternodeCollateral(int nTargetHeight) const
+    {
+        if(nTargetHeight >=10000 && nTargetHeight < 39000 ) {
+            return 550;
+        } else if (nTargetHeight >= 39000 &&  nTargetHeight < 290800){
+            return 1000;
+        } else if (nTargetHeight > 290800 && nTargetHeight < 553600){
+            return 2500;
+        } else if(nTargetHeight >= 553600){
+            return 3500;
+        }
+        return 250;
+    }*/
+
     CAmount StakingMinInput(int nTargetHeight) const
     {
         if(nTargetHeight < 10000) {
             return 0 * COIN;
         }
-        else
+        else if (nTargetHeight >= 10000 && nTargetHeight < 39000)
         {
             return 10 * COIN;
+        }
+        else
+        {
+            return 1 * COIN;
         }
     }
 
@@ -379,7 +404,8 @@ public:
         nBIP65ActivationHeight = 851019;
         // Activation height for TimeProtocolV2, Blocks V7 and newMessageSignatures
         nBlockTimeProtocolV2 = 100;
-
+        nCollateralMaturity = 300;
+        nCollateralMaturityEnforcementHeight = 1000;
         // Public coin spend enforcement
         nPublicZCSpends = 100;
 
@@ -444,16 +470,16 @@ public:
 
         return 250;
     }
-    
+
     CAmount StakingMinInput(int nTargetHeight) const
     {
         if(nTargetHeight > 2000) {
             return 30 * COIN;
         }
-        
+
         return 0;
     }
-    
+
     const Checkpoints::CCheckpointData& Checkpoints() const
     {
         return dataTestnet;
@@ -579,6 +605,7 @@ public:
     virtual void setDefaultConsistencyChecks(bool afDefaultConsistencyChecks) { fDefaultConsistencyChecks = afDefaultConsistencyChecks; }
     virtual void setAllowMinDifficultyBlocks(bool afAllowMinDifficultyBlocks) { fAllowMinDifficultyBlocks = afAllowMinDifficultyBlocks; }
     virtual void setSkipProofOfWorkCheck(bool afSkipProofOfWorkCheck) { fSkipProofOfWorkCheck = afSkipProofOfWorkCheck; }
+    virtual void setnEnforMultiTierMasternode(int afMultiTierMasternode){nEnforMultiTierMasternode = afMultiTierMasternode ;} // Added for Multitier-Architecture Updation
 };
 static CUnitTestParams unitTestParams;
 

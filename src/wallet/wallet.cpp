@@ -1308,7 +1308,7 @@ CAmount CWalletTx::GetUnlockedCredit() const
         const CTxOut& txout = vout[i];
 
         if (pwallet->IsSpent(hashTx, i) || pwallet->IsLockedCoin(hashTx, i)) continue;
-        if (fMasterNode && vout[i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN) continue; // do not count MN-like outputs
+        if (fMasterNode && (vout[i].nValue == 550 * COIN || vout[i].nValue == 1000 * COIN || vout[i].nValue == 2500 * COIN || vout[i].nValue == 3500 * COIN || vout[i].nValue == 250 * COIN)) continue; // do not count MN-like outputs
 
         nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
         if (!MoneyRange(nCredit))
@@ -1342,7 +1342,7 @@ CAmount CWalletTx::GetLockedCredit() const
         }
 
         // Add masternode collaterals which are handled likc locked coins
-        else if (fMasterNode && vout[i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN) {
+        else if (fMasterNode && (vout[i].nValue == 550 * COIN || vout[i].nValue == 1000 * COIN || vout[i].nValue == 2500 * COIN || vout[i].nValue == 3500 * COIN || vout[i].nValue == 250 * COIN)) {
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
         }
 
@@ -1417,7 +1417,7 @@ CAmount CWalletTx::GetLockedWatchOnlyCredit() const
         }
 
         // Add masternode collaterals which are handled likc locked coins
-        else if (fMasterNode && vout[i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN) {
+        else if (fMasterNode && (vout[i].nValue == 550 * COIN || vout[i].nValue == 1000 * COIN || vout[i].nValue == 2500 * COIN || vout[i].nValue == 3500 * COIN || vout[i].nValue == 250 * COIN)) {
             nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
         }
 
@@ -1862,10 +1862,41 @@ CAmount CWallet::GetUnconfirmedBalance() const
 
 CAmount CWallet::GetImmatureBalance() const
 {
-    return loopTxsBalance([](const uint256& id, const CWalletTx& pcoin, CAmount& nTotal) {
+     CAmount nTotal;
+     loopTxsBalance([](const uint256& id, const CWalletTx& pcoin, CAmount& nTotal) {
             nTotal += pcoin.GetImmatureCredit(false);
     });
+     return nTotal += GetImmatureCollateral();// zepgTracker->
 }
+
+
+CAmount CWallet::GetImmatureCollateral() const
+{
+    CAmount nTotal = 0;
+
+
+    std::vector<COutput> vCoins;
+    AvailableCoins(vCoins, true, NULL, false, ONLY_10000, false, 1, false, false);
+    // vector<COutput> vCoins;
+    // pwalletMain->AvailableCoins(vCoins, true, NULL, false, ONLY_MNCOLLATERAL);
+    // BOOST_FOREACH (const COutput& out, vCoins) {
+    //     if (out.tx->vout[out.i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN && Params().COLLATERAL_MATURITY() > out.tx->GetDepthInMainChain(false)
+    //         && chainActive.Height() > Params().CollateralMaturityEnforcementHeight())
+    //         { //exactly
+    //             nTotal+= out.tx->vout[out.i].nValue;
+    //         }
+    // }
+
+    for(COutput& out : vCoins){
+         if (out.tx->vout[out.i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN && Params().COLLATERAL_MATURITY() > out.tx->GetDepthInMainChain(false)
+            && chainActive.Height() > Params().CollateralMaturityEnforcementHeight())
+            { //exactly
+                nTotal += out.tx->vout[out.i].nValue;
+            }
+    };
+    return nTotal;
+}
+
 
 CAmount CWallet::GetImmatureColdStakingBalance() const
 {
@@ -1997,13 +2028,13 @@ void CWallet::AvailableCoins(
                 if (nCoinType == ONLY_DENOMINATED) {
                     found = IsDenominatedAmount(pcoin->vout[i].nValue);
                 } else if (nCoinType == ONLY_NOT10000IFMN) {
-                    found = !(fMasterNode && pcoin->vout[i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN);
+                    found = !(fMasterNode && (pcoin->vout[i].nValue == 550 * COIN || pcoin->vout[i].nValue == 1000 * COIN || pcoin->vout[i].nValue == 2500 * COIN || pcoin->vout[i].nValue == 3500 * COIN || pcoin->vout[i].nValue == 250 * COIN));
                 } else if (nCoinType == ONLY_NONDENOMINATED_NOT10000IFMN) {
                     if (IsCollateralAmount(pcoin->vout[i].nValue)) continue; // do not use collateral amounts
                     found = !IsDenominatedAmount(pcoin->vout[i].nValue);
-                    if (found && fMasterNode) found = pcoin->vout[i].nValue != Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN; // do not use Hot MN funds
+                    if (found && fMasterNode) found = (pcoin->vout[i].nValue != 550 * COIN && pcoin->vout[i].nValue != 1000 * COIN && pcoin->vout[i].nValue != 2500 * COIN && pcoin->vout[i].nValue != 3500 * COIN && pcoin->vout[i].nValue != 250 * COIN); // do not use Hot MN funds
                 } else if (nCoinType == ONLY_10000) {
-                    found = pcoin->vout[i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN;
+                    found = (pcoin->vout[i].nValue == 550 * COIN || pcoin->vout[i].nValue == 1000 * COIN || pcoin->vout[i].nValue == 2500 * COIN || pcoin->vout[i].nValue == 3500 * COIN || pcoin->vout[i].nValue == 250 * COIN); // Added hard coded check fr collateral funds for multi-tier architecture
                 } else {
                     found = true;
                 }

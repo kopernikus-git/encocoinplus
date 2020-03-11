@@ -58,6 +58,7 @@ public:
     int RejectBlockOutdatedMajority() const { return nRejectBlockOutdatedMajority; }
     int ToCheckBlockUpgradeMajority() const { return nToCheckBlockUpgradeMajority; }
     int MaxReorganizationDepth() const { return nMaxReorganizationDepth; }
+    int EnforMultiTierMasternode() const { return nEnforMultiTierMasternode; } // Added for Multitier-Architecture Updation
 
     /** Used if GenerateBitcoins is called with a negative number of threads */
     int DefaultMinerThreads() const { return nMinerThreads; }
@@ -74,9 +75,13 @@ public:
     bool SkipProofOfWorkCheck() const { return fSkipProofOfWorkCheck; }
     /** Make standard checks */
     bool RequireStandard() const { return fRequireStandard; }
+
     int64_t TargetSpacing() const { return nTargetSpacing; }
     int64_t TargetTimespan(const bool fV2 = true) const { return fV2 ? nTargetTimespan_V2 : nTargetTimespan; }
+    CAmount MasternodeCollateral() const { return nMasternodeCollateral * COIN; }
+    int COLLATERAL_MATURITY() const { return nCollateralMaturity; }
 
+    int CollateralMaturityEnforcementHeight() const { return nCollateralMaturityEnforcementHeight; }
     /** returns the coinbase maturity **/
     int COINBASE_MATURITY() const { return nMaturity; }
 
@@ -166,9 +171,10 @@ public:
 
     /** Masternode colleteral value */
     virtual int GetRequiredMasternodeCollateral(int nTargetHeight)  const = 0;
+    //virtual int* GetRequiredMasternodeCollateral(int nTargetHeight)  const = 0;
     /** Address of developers fund */
     std::string GetDevFundAddress() const { return  strDevFundAddress; }
-   
+
 protected:
     CChainParams() {}
 
@@ -198,7 +204,9 @@ protected:
     int nFutureTimeDriftPoW;
     int nFutureTimeDriftPoS;
     int nTimeSlotLength;
-
+    int nEnforMultiTierMasternode; // Added for Multitier-Architecture Updation
+    int nCollateralMaturity;
+    int nCollateralMaturityEnforcementHeight;
     int nModifierUpdateBlock;
     CAmount nMaxMoneyOut;
     int nMinerThreads;
@@ -216,6 +224,7 @@ protected:
     bool fSkipProofOfWorkCheck;
     bool fTestnetToBeDeprecatedFieldRPC;
     bool fHeadersFirstSyncingActive;
+
     int nPoolMaxTransactions;
     int nBudgetCycleBlocks;
     std::string strSporkPubKey;
@@ -282,6 +291,7 @@ public:
     virtual void setDefaultConsistencyChecks(bool aDefaultConsistencyChecks) = 0;
     virtual void setAllowMinDifficultyBlocks(bool aAllowMinDifficultyBlocks) = 0;
     virtual void setSkipProofOfWorkCheck(bool aSkipProofOfWorkCheck) = 0;
+    virtual void setnEnforMultiTierMasternode(int aEnforMultiTierMasternode) = 0; // Added for Multitier-Architecture Updation
 };
 
 

@@ -882,6 +882,8 @@ static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* 
     rv.push_back(Pair("version", version));
     rv.push_back(Pair("enforce", SoftForkMajorityDesc(version, pindex, Params().EnforceBlockUpgradeMajority())));
     rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, Params().RejectBlockOutdatedMajority())));
+    rv.push_back(Pair("multitierEnables", SoftForkMajorityDesc(version, pindex, Params().EnforMultiTierMasternode()))); //Added for Multitier-Architecture Updation
+
     return rv;
 }
 
@@ -905,7 +907,8 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
             "     {\n"
             "        \"id\": \"xxxx\",        (string) name of softfork\n"
             "        \"version\": xx,         (numeric) block version\n"
-            "        \"enforce\": {           (object) progress toward enforcing the softfork rules for new-version blocks\n"
+            "        \"multitierEnables\":xx  (numeric) block height at which multitier gets activated " // Added for Multitier-Architecture Updation
+            "        \"enforce\": {}           (object) progress toward enforcing the softfork rules for new-version blocks\n"
             "           \"status\": xx,       (boolean) true if threshold reached\n"
             "           \"found\": xx,        (numeric) number of blocks with the new version found\n"
             "           \"required\": xx,     (numeric) number of blocks required to trigger\n"

@@ -197,7 +197,39 @@ bool MasterNodeWizardDialog::createMN(){
         }
 
         // const QString& addr, const QString& label, const CAmount& amount, const QString& message
-        SendCoinsRecipient sendCoinsRecipient(QString::fromStdString(address.ToString()), QString::fromStdString(alias),  walletModel->getRequiredMasternodeCollateral() * COIN, "");
+        int masterNodeCollateralLevel = 0;
+        CAmount masterNodeBalance = 0;
+        //CAmount mastrnodeBalance = 0;
+        masterNodeCollateralLevel = walletModel->getRequiredMasternodeCollateral();
+        if(masterNodeCollateralLevel == 1)
+        {
+           if(walletModel->getBalance() <= (COIN * 550))
+           {
+           masterNodeBalance = 550;
+           }
+        }
+        else if(masterNodeCollateralLevel == 2)
+        {
+            if(walletModel->getBalance() >= (COIN * 1000) && walletModel->getBalance() < (COIN * 2500))
+            {
+            masterNodeBalance = 1000;
+            }
+            else if (walletModel->getBalance() >= (COIN * 2500) && walletModel->getBalance() < (COIN * 3500))
+            {
+                masterNodeBalance = 2500;
+            }else if(walletModel->getBalance() >= (COIN * 3500))
+            {
+                masterNodeBalance = 3500;
+            }
+        }
+        else if(masterNodeCollateralLevel == 3)
+        {
+            if(walletModel->getBalance() <= (COIN * 250))
+           {
+            masterNodeBalance = 250;
+           }
+        }
+        SendCoinsRecipient sendCoinsRecipient(QString::fromStdString(address.ToString()), QString::fromStdString(alias),  masterNodeBalance * COIN, "");
 
         // Send the 10 tx to one of your address
         QList<SendCoinsRecipient> recipients;
@@ -293,7 +325,7 @@ bool MasterNodeWizardDialog::createMN(){
                 int indexOut = -1;
                 for (int i=0; i < (int)walletTx->vout.size(); i++){
                     CTxOut& out = walletTx->vout[i];
-                    if (out.nValue == walletModel->getRequiredMasternodeCollateral() * COIN){
+                    if (out.nValue == 550 * COIN || out.nValue == 1000 * COIN || out.nValue == 2500 * COIN || out.nValue == 3500 * COIN || out.nValue == 250 * COIN){
                         indexOut = i;
                     }
                 }
