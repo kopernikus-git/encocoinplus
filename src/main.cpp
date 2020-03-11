@@ -71,6 +71,7 @@ std::map<uint256, uint256> mapProofOfStake;
 CChain chainActive;
 CBlockIndex* pindexBestHeader = NULL;
 int64_t nTimeBestReceived = 0;
+int nLockedCollateralRemaingTime = 0;
 
 // Best block section
 CWaitableCriticalSection g_best_block_mutex;
@@ -2393,7 +2394,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState& state, const CCoinsVi
             {
                 if (nSpendHeight - coins->nHeight <  (coins->nHeight + Params().COLLATERAL_MATURITY()) && nSpendHeight > Params().CollateralMaturityEnforcementHeight()){
                     LockedCollateralRemainTime = (Params().COLLATERAL_MATURITY() -(nSpendHeight - coins->nHeight));
-                    Params().show_Collateral_Locked_Remaining_Time(LockedCollateralRemainTime);
+                    nLockedCollateralRemaingTime = LockedCollateralRemainTime;
                     return state.Invalid(
                              error("CheckInputs() : tried to spend collateral at depth %d", nSpendHeight - coins->nHeight),
                              REJECT_INVALID, "bad-txns-premature-spend-of-collateral");

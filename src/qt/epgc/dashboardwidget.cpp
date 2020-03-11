@@ -136,27 +136,27 @@ DashboardWidget::DashboardWidget(EPGCGUI* parent) :
     ui->listTransactions->setUniformItemSizes(true);
 
     // Sync Warning
-    //ui->layoutWarning->setVisible(true);
-    //ui->lblWarning->setText(tr("Please wait until the wallet is fully synced to see your correct balance"));
-    //setCssProperty(ui->lblWarning, "text-warning");
-    //setCssProperty(ui->imgWarning, "ic-warning");
+    ui->layoutWarning->setVisible(true);
+    ui->lblWarning->setText(tr("Please wait, wallet is not fully synced "));
+    setCssProperty(ui->lblWarning, "text-warning");
+    setCssProperty(ui->imgWarning, "ic-warning");
 
     //Empty List
-    //ui->emptyContainer->setVisible(false);
-    //setCssProperty(ui->pushImgEmpty, "img-empty-transactions");
+    ui->emptyContainer->setVisible(false);
+    setCssProperty(ui->pushImgEmpty, "img-empty-transactions");
 
-    //ui->labelEmpty->setText(tr("No transactions yet"));
-    //setCssProperty(ui->labelEmpty, "text-empty");
-    //setCssProperty(ui->chartContainer, "container-chart");
-    //setCssProperty(ui->pushImgEmptyChart, "img-empty-staking-on");
+    ui->labelEmpty->setText(tr("No transactions yet"));
+    setCssProperty(ui->labelEmpty, "text-empty");
+    setCssProperty(ui->chartContainer, "container-chart");
+    setCssProperty(ui->pushImgEmptyChart, "img-empty-staking-on");
 
     ui->btnHowTo->setText(tr("How to get EPG"));
     setCssBtnSecondary(ui->btnHowTo);
 
 
-    //setCssProperty(ui->labelEmptyChart, "text-empty");
-    //ui->labelMessageEmpty->setText(tr("You can verify the staking activity in the status bar at the top right of the wallet.\nIt will start automatically as soon as the wallet has enough confirmations on any unspent balances, and the wallet has synced."));
-    //setCssSubtitleScreen(ui->labelMessageEmpty);
+    setCssProperty(ui->labelEmptyChart, "text-empty");
+    ui->labelMessageEmpty->setText(tr("You can verify the staking activity in the status bar at the top right of the wallet.\nIt will start automatically as soon as the wallet has enough confirmations on any unspent balances, and the wallet has synced."));
+    setCssSubtitleScreen(ui->labelMessageEmpty);
 
     // Chart State
     ui->layoutChart->setVisible(false);
@@ -177,11 +177,11 @@ bool hasCharts = false;
     connect(ui->pushButtonAll, &QPushButton::clicked, [this](){setChartShow(ALL);});
 #endif
 
-   /* if (hasCharts) {
+    if (hasCharts) {
         ui->labelEmptyChart->setText(tr("You have no staking rewards"));
     } else {
-        //ui->labelEmptyChart->setText(tr("No charts library"));
-    }*/
+        ui->labelEmptyChart->setText(tr("No charts library"));
+    }
 }
 
 void DashboardWidget::handleTransactionClicked(const QModelIndex &index){
@@ -264,9 +264,9 @@ void DashboardWidget::updateMasternodeInfo()
     CAmount tNodesSumm = mn1*1000 + mn2*2500 + mn3*3500;
     CAmount tMoneySupply = chainActive.Tip()->nMoneySupply;
     double tLocked = tMoneySupply > 0 ? 100 * static_cast<double>(tNodesSumm) / static_cast<double>(tMoneySupply / COIN) : 0;
-    int locked_Colletral_Remaining_Blocks = Params().set_Collateral_Locked_Remaining_Time();
+    int locked_Colletral_Remaining_Blocks = nLockedCollateralRemaingTime;
     ui->label_LockedCoin_value->setText(QString::number(tNodesSumm).append(" (" + QString::number(tLocked,'f',1) + "%)"));
-    ui->label_LockedCoin_Time->setText(QString::number(locked_Colletral_Remaining_Blocks));
+    ui->label_TimeRemain_value->setText(QString::number(locked_Colletral_Remaining_Blocks));
 
     // update timer
     if (timerinfo_mn->interval() == 1000)

@@ -81,7 +81,6 @@ public:
 	CAmount MasternodeCollateral() const { return nMasternodeCollateral * COIN; }
     int COLLATERAL_MATURITY() const { return nCollateralMaturity; }
 
-    int set_Collateral_Locked_Remaining_Time() const { return nLockedCollateralRemainTime;}
     int CollateralMaturityEnforcementHeight() const { return nCollateralMaturityEnforcementHeight; }
     /** returns the coinbase maturity **/
     int COINBASE_MATURITY() const { return nMaturity; }
@@ -172,7 +171,6 @@ public:
 
     /** Masternode colleteral value */
     virtual int GetRequiredMasternodeCollateral(int nTargetHeight)  const = 0;
-    virtual int show_Collateral_Locked_Remaining_Time(int LockedTime) const = 0;
     //virtual int* GetRequiredMasternodeCollateral(int nTargetHeight)  const = 0;
     /** Address of developers fund */
     std::string GetDevFundAddress() const { return  strDevFundAddress; }
@@ -210,7 +208,6 @@ protected:
     int nCollateralMaturity;
     int nCollateralMaturityEnforcementHeight;
     int nModifierUpdateBlock;
-    int nLockedCollateralRemainTime;
     CAmount nMaxMoneyOut;
     int nMinerThreads;
     std::vector<CDNSSeedData> vSeeds;

@@ -186,7 +186,6 @@ public:
         nEnforMultiTierMasternode = 39000;          // Added for Multitier-Architecture Updation
 	    nCollateralMaturity = 210240;                // Block numbers created in one year
         nCollateralMaturityEnforcementHeight = 39000;
-        nLockedCollateralRemainTime = 0;
         nMasternodeCollateral = 200;
         strDevFundAddress = "7Ns4orZTzEqrVPSPE4JhcGHhoEsqSnrYg7";
         nStakeInputMinimal = 75 * COIN;
@@ -257,11 +256,9 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        //vSeeds.push_back(CDNSSeedData("173.199.119.55", "173.199.119.55"));     // Primary DNS Seeder
-        //vSeeds.push_back(CDNSSeedData("149.28.34.121", "149.28.34.121"));
-        //vSeeds.push_back(CDNSSeedData("149.28.235.72", "149.28.235.72"));
-        vFixedSeeds.clear();
-        vSeeds.clear();
+        vSeeds.push_back(CDNSSeedData("173.199.119.55", "173.199.119.55"));     // Primary DNS Seeder
+        vSeeds.push_back(CDNSSeedData("149.28.34.121", "149.28.34.121"));
+        vSeeds.push_back(CDNSSeedData("149.28.235.72", "149.28.235.72"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 15);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 13);
@@ -325,11 +322,6 @@ public:
         {
             return 3;
         }
-    }
-
-    void  show_Collateral_Locked_Remaining_Time(int LockedTime)
-    { 
-        nLockedCollateralRemainTime = LockedTime ;
     }
 
    /* int GetRequiredMasternodeCollateral(int nTargetHeight) const
