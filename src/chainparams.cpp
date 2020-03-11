@@ -184,7 +184,7 @@ public:
         nMaxMoneyOut = 40000000 * COIN;
         nMinColdStakingAmount = 1 * COIN;
         nEnforMultiTierMasternode = 39000;          // Added for Multitier-Architecture Updation
-	    nCollateralMaturity = 210240;                // Block numbers created in one year
+        nCollateralMaturity = 210240;                // Block numbers created in one year
         nCollateralMaturityEnforcementHeight = 39000;
         nMasternodeCollateral = 200;
         strDevFundAddress = "7Ns4orZTzEqrVPSPE4JhcGHhoEsqSnrYg7";

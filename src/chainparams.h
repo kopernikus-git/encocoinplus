@@ -78,7 +78,7 @@ public:
 
     int64_t TargetSpacing() const { return nTargetSpacing; }
     int64_t TargetTimespan(const bool fV2 = true) const { return fV2 ? nTargetTimespan_V2 : nTargetTimespan; }
-	CAmount MasternodeCollateral() const { return nMasternodeCollateral * COIN; }
+    CAmount MasternodeCollateral() const { return nMasternodeCollateral * COIN; }
     int COLLATERAL_MATURITY() const { return nCollateralMaturity; }
 
     int CollateralMaturityEnforcementHeight() const { return nCollateralMaturityEnforcementHeight; }
@@ -174,7 +174,7 @@ public:
     //virtual int* GetRequiredMasternodeCollateral(int nTargetHeight)  const = 0;
     /** Address of developers fund */
     std::string GetDevFundAddress() const { return  strDevFundAddress; }
-   
+
 protected:
     CChainParams() {}
 
