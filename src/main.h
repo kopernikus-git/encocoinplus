@@ -247,7 +247,7 @@ int64_t GetDevelopersPayment(int nHeight, int64_t blockValue, bool isZEPGStake);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, bool fProofOfStake);
 
 bool ActivateBestChain(CValidationState& state, CBlock* pblock = NULL, bool fAlreadyChecked = false);
-CAmount GetBlockValue(int nHeight, unsigned int masternodeLevel = 4);
+CAmount GetBlockValue(int nHeight, unsigned int masternodeLevel = 0);
 
 /** Create a new block index entry for a given block hash */
 CBlockIndex* InsertBlockIndex(uint256 hash);

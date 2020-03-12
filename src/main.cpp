@@ -2017,15 +2017,18 @@ int64_t GetBlockValue(int nHeight, unsigned int masternodeLevel)
     if (nHeight == 0) {
         nSubsidy = 200000 * COIN;
     }else if (nHeight >= Params().EnforMultiTierMasternode()){
-
-        switch(masternodeLevel){
-            case 1: return nSubsidy = 8 * COIN;
-            case 2: return nSubsidy = 6 * COIN;
-            case 3: return nSubsidy = 2 * COIN;
-            case 4: return nSubsidy = 1 * COIN;
-        }
+        if(masternodeLevel >=1 && masternodeLevel <=3)
+        {
+            switch(masternodeLevel)
+            {
+                case 1: return nSubsidy = 2 * COIN;
+                case 2: return nSubsidy = 6 * COIN;
+                case 3: return nSubsidy = 8 * COIN;
+            }
+        }else
+            return nSubsidy = 2 * COIN;
     }else {
-        nSubsidy = 1 * COIN;
+        nSubsidy = 2 * COIN;
     }
     return nSubsidy;
 }
@@ -4752,8 +4755,6 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
                     // TODO: Remove this chain from disk.
                     return error("%s: forked chain longer than maximum reorg limit", __func__);
                 }
-
-     
                 for (const CTransaction& t : bl.vtx) {
                     // Loop through every input of this tx
                     for (const CTxIn& in: t.vin) {
