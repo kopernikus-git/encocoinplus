@@ -233,7 +233,8 @@ void CMasternode::Check(bool forceCheck)
         uint256 hash;
         CAmount masterNodeVout = 0;
         int checkMasterNodeCollateralLevel = 0;
-        checkMasterNodeCollateralLevel = ((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN);
+        checkMasterNodeCollateralLevel = (Params().GetRequiredMasternodeCollateral(chainActive.Height()));
+        //checkMasterNodeCollateralLevel = ((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN);
         if(GetTransaction(vin.prevout.hash, txVin, hash, true)) {
             for (CTxOut out : txVin.vout) {
                 if (checkMasterNodeCollateralLevel == 1)
@@ -268,8 +269,7 @@ void CMasternode::Check(bool forceCheck)
         {
             TRY_LOCK(cs_main, lockMain);
             if (!lockMain) return;
-
-            if (!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)) {
+            if (!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL,false, false, true)) {
                 activeState = MASTERNODE_VIN_SPENT;
                 return;
             }
@@ -736,7 +736,8 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
         uint256 hash;
         CAmount masterNodeVout = 0;
         int checkMasterNodeCollateralLevel = 0;
-        checkMasterNodeCollateralLevel = ((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN);
+        checkMasterNodeCollateralLevel = (Params().GetRequiredMasternodeCollateral(chainActive.Height()));
+        //checkMasterNodeCollateralLevel = ((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN);
         if(GetTransaction(vin.prevout.hash, txVin, hash, true)) {
             for (CTxOut out : txVin.vout) {
 
@@ -764,7 +765,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
          }
     CValidationState state;
     CMutableTransaction tx = CMutableTransaction();
-    CTxOut vout = CTxOut((Params().GetRequiredMasternodeCollateral(masterNodeVout) * COIN), obfuScationPool.collateralPubKey);
+    CTxOut vout = CTxOut(masterNodeVout * COIN, obfuScationPool.collateralPubKey);
     tx.vin.push_back(vin);
     tx.vout.push_back(vout);
 
@@ -776,8 +777,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
             masternodeSync.mapSeenSyncMNB.erase(GetHash());
             return false;
         }
-
-        if (!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)) {
+        if (!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL, false, false, true)) {
             //set nDos
             state.IsInvalid(nDoS);
             return false;

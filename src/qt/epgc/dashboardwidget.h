@@ -124,6 +124,7 @@ private slots:
     void updateDisplayUnit();
     void showList();
     void updateMasternodeInfo();
+    void updateBlockChainInfo();
     void onTxArrived(const QString& hash, const bool& isCoinStake, const bool& isCSAnyType);
 
 #ifdef USE_QTCHARTS

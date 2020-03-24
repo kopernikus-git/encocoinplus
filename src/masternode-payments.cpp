@@ -322,7 +322,7 @@ bool IsBlockPayeeValid(const CBlock& block, int nBlockHeight)
         masternodePaymentsValid = false;
         LogPrint("masternode","Invalid mn payment detected %s\n", txNew.ToString().c_str());
     }
-    
+
     if (masternodePaymentsValid && devbudgetValid)
         return true;
 
@@ -409,7 +409,7 @@ std::string GetRequiredPaymentsString(int nBlockHeight)
                 }
               // dev payment
               CBitcoinAddress devbaddress = CBitcoinAddress(Params().GetDevFundAddress());
-              txNew.vout.push_back(CTxOut(devPayment, GetScriptForDestination(devbaddress.Get())));	
+              txNew.vout.push_back(CTxOut(devPayment, GetScriptForDestination(devbaddress.Get())));
             }
         } else {
             txNew.vout.resize(2);
@@ -441,12 +441,11 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
 
     //spork
     if (!masternodePayments.GetBlockPayee(pindexPrev->nHeight + 1, masternodeLevel,payee)) {
-        //no masternode detected
+        //no masternode de()tected
         CMasternode* winningNode = mnodeman.GetCurrentMasterNode(masternodeLevel,1);
-        if (winningNode) {
+        if (winningNode)  {
             payee = GetScriptForDestination(winningNode->pubKeyCollateralAddress.GetID());
         } else {
-            LogPrint("masternode","CreateNewBlock: Failed to detect masternode to pay\n");
             hasPayment = false;
         }
     }
@@ -454,7 +453,6 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
     CAmount blockValue = GetBlockValue(pindexPrev->nHeight,masternodeLevel);
     CAmount masternodePayment = GetMasternodePayment(pindexPrev->nHeight, masternodeLevel,blockValue, 0, fZEPGStake);
     CAmount devPayment = GetDevelopersPayment(pindexPrev->nHeight,blockValue, fZEPGStake);
-
     if (hasPayment) {
         if (fProofOfStake) {
             /**For Proof Of Stake vout[0] must be null
@@ -477,11 +475,13 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
                     unsigned int outputs = i-1;
                     CAmount mnPaymentSplit = (masternodePayment + devPayment) / outputs;
                     CAmount mnPaymentRemainder = (masternodePayment + devPayment) - (mnPaymentSplit * outputs);
+
                     for (unsigned int j=1; j<=outputs; j++) {
                         txNew.vout[j].nValue -= mnPaymentSplit;
                     }
                     // in case it's not an even division, take the last bit of dust from the last one
                     txNew.vout[outputs].nValue -= mnPaymentRemainder;
+
                 }
               // dev payment
               CBitcoinAddress devbaddress = CBitcoinAddress(Params().GetDevFundAddress());
@@ -617,14 +617,16 @@ bool CMasternodePayments::GetBlockPayee(int nBlockHeight, unsigned masternodeLev
     auto block = mapMasternodeBlocks.find(nBlockHeight);
 
     if(block == mapMasternodeBlocks.cend())
+    {
         return false;
+    }
     if(nBlockHeight >= Params().EnforMultiTierMasternode())
     {
     return block->second.GetPayee(masternodeLevel, payee);
     }
     else
     {
-    return mapMasternodeBlocks[nBlockHeight].GetPayee(payee);
+        return mapMasternodeBlocks[nBlockHeight].GetPayee(payee);
     }
 }
 
@@ -664,6 +666,7 @@ bool CMasternodePayments::GetBlockPayee(int nBlockHeight, unsigned masternodeLev
 bool CMasternodePayments::IsScheduled(CMasternode& mn, int nSameLevelMNCount, int nNotBlockHeight) const
 {
     LOCK(cs_mapMasternodeBlocks);
+    LogPrintf("At line 699 for ischeduled masternode ****\n");
 
     int64_t nHeight;
     {
@@ -831,8 +834,9 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
         return true;
 
     CAmount nReward = GetBlockValue(nBlockHeight - 1);
+    LogPrint("mnpayments", "-- Slected nReward is : %lld\n", nReward);
     // substract dev fee if enable
-    int64_t devFee = 10019; // For checking DEV fee spork enablement
+    int64_t devFee = sporkManager.GetSporkValue(SPORK_19_DEV_FEE); // For checking DEV fee spork enablement
     if (devFee > 0){
         bool foundDevFee = false;
         if (devFee > 10) devFee = 10;

@@ -183,9 +183,9 @@ public:
         nMasternodeCountDrift = 20;
         nMaxMoneyOut = 40000000 * COIN;
         nMinColdStakingAmount = 1 * COIN;
-        nEnforMultiTierMasternode = 39000;          // Added for Multitier-Architecture Updation
+        nEnforMultiTierMasternode = 45500;          // Added for Multitier-Architecture Updation
         nCollateralMaturity = 210240;                // Block numbers created in one year
-        nCollateralMaturityEnforcementHeight = 39000;
+        nCollateralMaturityEnforcementHeight = 50000;
         nMasternodeCollateral = 200;
         strDevFundAddress = "7Ns4orZTzEqrVPSPE4JhcGHhoEsqSnrYg7";
         nStakeInputMinimal = 75 * COIN;
@@ -310,11 +310,11 @@ public:
 
     int GetRequiredMasternodeCollateral(int nTargetHeight) const
     {
-        if(nTargetHeight >=10000 && nTargetHeight < 39000 )
+        if(nTargetHeight >=10000 && nTargetHeight < 45500 )
         {
             return 1;
         }
-        else if (nTargetHeight >= 39000 )
+        else if (nTargetHeight >= 45500 )
         {
             return 2;
         }

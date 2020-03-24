@@ -1887,6 +1887,7 @@ CAmount CWallet::GetImmatureCollateral() const
     //         }
     // }
     int checkMasterNodeCollateralLevel = 0;
+    checkMasterNodeCollateralLevel = (Params().GetRequiredMasternodeCollateral(chainActive.Height()));
     for(COutput& out : vCoins){
             if (checkMasterNodeCollateralLevel == 1)
         {
@@ -2063,7 +2064,6 @@ void CWallet::AvailableCoins(
                     if (pcoin->vout[i].IsZerocoinMint())
                         continue;
                 }
-
                 isminetype mine = IsMine(pcoin->vout[i]);
                 if (IsSpent(wtxid, i))
                     continue;
@@ -2817,6 +2817,7 @@ bool CWallet::CreateCoinStake(
                 return error("CreateCoinStake : exceeded coinstake size limit");
 
             //Masternode payment
+        LogPrintf("At line 2826 beofre calling FillBlockPayee");
         FillBlockPayee(txNew, nMinFee, true, stakeInput->IsZEPG());
 
         uint256 hashTxOut = txNew.GetHash();

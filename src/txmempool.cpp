@@ -484,7 +484,7 @@ void CTxMemPool::removeCoinbaseSpends(const CCoinsViewCache* pcoins, unsigned in
             }
             int checkMasterNodeCollateralLevel = 0;
             CAmount balCheck;
-            checkMasterNodeCollateralLevel = (Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN);
+            checkMasterNodeCollateralLevel = (Params().GetRequiredMasternodeCollateral(chainActive.Height()));
             if (checkMasterNodeCollateralLevel == 1)
             {
                 if(coins->vout[txin.prevout.n].nValue == 550 * COIN && nMemPoolHeight - coins->nHeight < Params().COLLATERAL_MATURITY()

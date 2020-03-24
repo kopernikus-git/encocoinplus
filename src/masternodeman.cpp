@@ -1054,7 +1054,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         uint256 hash;
         CAmount masterNodeVout = 0;
         int checkMasterNodeCollateralLevel = 0;
-        checkMasterNodeCollateralLevel = ((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN);
+        checkMasterNodeCollateralLevel = (Params().GetRequiredMasternodeCollateral(chainActive.Height()));
+        //checkMasterNodeCollateralLevel = ((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN);
         if(GetTransaction(vin.prevout.hash, txVin, hash, true)) {
             for (CTxOut out : txVin.vout) {
                 if (checkMasterNodeCollateralLevel == 1)
@@ -1090,7 +1091,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         {
             TRY_LOCK(cs_main, lockMain);
             if (!lockMain) return;
-            fAcceptable = AcceptableInputs(mempool, state, CTransaction(tx), false, NULL);
+            fAcceptable = AcceptableInputs(mempool, state, CTransaction(tx), false, NULL,false,false,true);
         }
 
         if (fAcceptable) {

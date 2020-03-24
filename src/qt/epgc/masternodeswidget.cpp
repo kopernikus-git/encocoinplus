@@ -428,11 +428,14 @@ void MasterNodesWidget::onDeleteMNClicked(){
 void MasterNodesWidget::onCreateMNClicked(){
     if(verifyWalletUnlocked()) {
         int masterNodeCollateralLevel = 0;
+        printf("At line 431 inside masternodewidget.cpp *********************************\n");
         //CAmount mastrnodeBalance = 0;
         masterNodeCollateralLevel = walletModel->getRequiredMasternodeCollateral();
+        printf("At line 431 inside masternodewidget.cpp *********************************\n");
+
         if(masterNodeCollateralLevel == 1)
         {
-           if(walletModel->getBalance() != (COIN * 550))
+           if(walletModel->getBalance() <= (COIN * 550))
            {
             inform(tr("Not enough balance to create a masternode, 550 EPG required."));
             return;
@@ -440,23 +443,29 @@ void MasterNodesWidget::onCreateMNClicked(){
         }
         else if(masterNodeCollateralLevel == 2)
         {
-           if(!(walletModel->getBalance() == (COIN * 1000) || walletModel->getBalance() == (COIN * 2500) || walletModel->getBalance() == (COIN * 3500)))
+           if(!(walletModel->getBalance() >  (COIN * 1000)))
            {
-            inform(tr("Not enough balance to create a masternode, 550 EPG required."));
+            inform(tr("Not enough balance to create a masternode, either 1000 , 2500 or 3500 EPG required."));
             return;
            }
         }
         else if(masterNodeCollateralLevel == 3)
         {
-            if(walletModel->getBalance() != (COIN * 250))
+            if(walletModel->getBalance() <= (COIN * 250))
            {
-            inform(tr("Not enough balance to create a masternode, 550 EPG required."));
+            inform(tr("Not enough balance to create a masternode, 250 EPG required."));
             return;
            }
         }
 
+        printf("At line 462 inside masternodewidget.cpp *********************************\n");
+
         showHideOp(true);
+        printf("At line 464 inside masternodewidget.cpp *********************************\n");
+
         MasterNodeWizardDialog *dialog = new MasterNodeWizardDialog(walletModel, window);
+        printf("At line 468 inside masternodewidget.cpp *********************************\n");
+
         if(openDialogWithOpaqueBackgroundY(dialog, window, 5, 7)) {
             if (dialog->isOk) {
                 // Update list

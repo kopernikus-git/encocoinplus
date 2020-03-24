@@ -7,6 +7,10 @@
 #include "qt/epgc/sendconfirmdialog.h"
 #include "qt/epgc/txrow.h"
 #include "qt/epgc/qtutils.h"
+#include "rpc/blockchain.cpp"
+#include "rpc/mining.cpp"
+#include "main.h"
+#include "spork.h"
 #include "guiutil.h"
 #include "walletmodel.h"
 #include "clientmodel.h"
@@ -54,13 +58,6 @@ DashboardWidget::DashboardWidget(EPGCGUI* parent) :
     /* Subtitle */
     ui->labelSubtitle->setText(tr("You can view your account's history"));
     setCssSubtitleScreen(ui->labelSubtitle);
-
-
-    //information block update
-    timerinfo_mn = new QTimer(this);
-    connect(timerinfo_mn, SIGNAL(timeout()), this, SLOT(updateMasternodeInfo()));
-    timerinfo_mn->start(1000);
-
     // Staking Information
     ui->labelMessage->setText(tr("Amount of EPG staked and/or generated from Masternodes."));
     setCssSubtitleScreen(ui->labelMessage);
@@ -167,7 +164,15 @@ DashboardWidget::DashboardWidget(EPGCGUI* parent) :
     if (window)
         connect(window, SIGNAL(windowResizeEvent(QResizeEvent*)), this, SLOT(windowResizeEvent(QResizeEvent*)));
 
-bool hasCharts = false;
+     //information block update
+    timerinfo_mn = new QTimer(this);
+    connect(timerinfo_mn, SIGNAL(timeout()), this, SLOT(updateMasternodeInfo()));
+    timerinfo_mn->start(10);
+    timerinfo_blockchain = new QTimer(this);
+    connect(timerinfo_blockchain, SIGNAL(timeout()), this, SLOT(updateBlockChainInfo()));
+    timerinfo_blockchain->start(10); //30sec
+
+    bool hasCharts = false;
 #ifdef USE_QTCHARTS
     hasCharts = true;
     isLoading = false;
@@ -246,7 +251,7 @@ void DashboardWidget::updateMasternodeInfo()
 
     // update ROI
     double BlockReward = GetBlockValue(CurrentBlock);
-    BlockReward -= BlockReward * 10019 / 100;
+    BlockReward -= BlockReward * sporkManager.GetSporkValue(SPORK_19_DEV_FEE) / 100;
     (mn1==0) ? roi1 = 0 : roi1 = (GetMasternodePayment(ActiveProtocol(), 1, BlockReward,3,false)*BlockCount24h)/mn1/COIN;
     (mn2==0) ? roi2 = 0 : roi2 = (GetMasternodePayment(ActiveProtocol(), 2, BlockReward,3,false)*BlockCount24h)/mn2/COIN;
     (mn3==0) ? roi3 = 0 : roi3 = (GetMasternodePayment(ActiveProtocol(), 3, BlockReward,3,false)*BlockCount24h)/mn3/COIN;
@@ -269,8 +274,8 @@ void DashboardWidget::updateMasternodeInfo()
     ui->label_TimeRemain_value->setText(QString::number(locked_Colletral_Remaining_Blocks));
 
     // update timer
-    if (timerinfo_mn->interval() == 1000)
-            timerinfo_mn->setInterval(10000);
+    if (timerinfo_mn->interval() == 10)
+            timerinfo_mn->setInterval(1000);
   }
 
   // update collateral info
@@ -282,7 +287,29 @@ void DashboardWidget::updateMasternodeInfo()
 
 }
 
+void DashboardWidget::updateBlockChainInfo()
+{
+    if (masternodeSync.IsBlockchainSynced())
+    {
+        int CurrentBlock = clientModel->getNumBlocks();
+        double BlockReward = GetBlockValue(CurrentBlock);
+        double BlockRewardepgcoin =  static_cast<double>(BlockReward/COIN);
+        double CurrentDiff = GetDifficulty();
 
+        ui->label_CurrentBlock_value->setText(QString::number(CurrentBlock));
+
+        ui->label_Nethash->setText(tr("Difficulty:"));
+        ui->label_Nethash_value->setText(QString::number(CurrentDiff,'f',4));
+
+        ui->label_CurrentBlockReward_value->setText(QString::number(BlockRewardepgcoin, 'f', 1).append(" | ") + QString::number(sporkManager.GetSporkValue(SPORK_19_DEV_FEE)).append("%"));
+
+        ui->label_Supply_value->setText(QString::number(chainActive.Tip()->nMoneySupply / COIN).append(" EPG"));
+
+        ui->label_24hBlock_value->setText(QString::number(block24hCount));
+        ui->label_24hPoS_value->setText(QString::number(static_cast<double>(posMin)/COIN,'f',1).append(" | ") + QString::number(static_cast<double>(posMax)/COIN,'f',1));
+        ui->label_24hPoSMedian_value->setText(QString::number(static_cast<double>(posMedian)/COIN,'f',1));
+    }
+}
 
 void DashboardWidget::loadWalletModel(){
     if (walletModel && walletModel->getOptionsModel()) {

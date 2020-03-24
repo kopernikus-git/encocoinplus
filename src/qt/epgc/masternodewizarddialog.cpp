@@ -55,13 +55,16 @@ MasterNodeWizardDialog::MasterNodeWizardDialog(WalletModel *model, QWidget *pare
 
     // Frame 4
     setCssProperty(ui->labelTitle4, "text-title-dialog");
-    setCssProperty({ui->labelSubtitleIp, ui->labelSubtitlePort}, "text-title");
+    setCssProperty({ui->labelSubtitleIp, ui->labelSubtitlePort, ui->labelCollateral}, "text-title");
     setCssSubtitleScreen(ui->labelSubtitleAddressIp);
 
     ui->lineEditIpAddress->setPlaceholderText("e.g 18.255.255.255");
     ui->lineEditPort->setPlaceholderText("e.g 29442");
+    ui->lineEditCollateral->setPlaceholderText("eg 1000 Or 2500 OR 3500");
     initCssEditLine(ui->lineEditIpAddress);
     initCssEditLine(ui->lineEditPort);
+    initCssEditLine(ui->lineEditCollateral);
+
     ui->stackedWidget->setCurrentIndex(pos);
     ui->lineEditPort->setValidator(new QIntValidator(0, 9999999, ui->lineEditPort));
     if(walletModel->isTestNetwork()){
@@ -186,6 +189,15 @@ bool MasterNodeWizardDialog::createMN(){
         std::string ipAddress = addressStr.toStdString();
         std::string port = portStr.toStdString();
 
+
+        QString collateralStr = ui->lineEditCollateral->text();
+        int collAmount = collateralStr.toInt();
+        printf("Va;lue at line 195 is %d\n",collAmount);
+        if(collAmount < 0 ){
+            returnStr = tr("Invalid balance colatral number");
+            return false;
+        }
+
         // New receive address
         CBitcoinAddress address;
         PairResult r = walletModel->getNewAddress(address, alias);
@@ -201,35 +213,54 @@ bool MasterNodeWizardDialog::createMN(){
         CAmount masterNodeBalance = 0;
         //CAmount mastrnodeBalance = 0;
         masterNodeCollateralLevel = walletModel->getRequiredMasternodeCollateral();
+        printf("Masternode balance at line 232 is %ld and masterNodeCollateralLevel is %d and value of coins is %ld",walletModel->getBalance(),masterNodeCollateralLevel , COIN * 550);
         if(masterNodeCollateralLevel == 1)
         {
-           if(walletModel->getBalance() <= (COIN * 550))
+           if(walletModel->getBalance() >= (COIN * 550))
            {
-           masterNodeBalance = 550;
+           masterNodeBalance = 550 * COIN;
+           }
+           else
+           {
+             returnStr = tr("Invalid balance colatral number");
+            return false;
            }
         }
         else if(masterNodeCollateralLevel == 2)
         {
-            if(walletModel->getBalance() >= (COIN * 1000) && walletModel->getBalance() < (COIN * 2500))
+            if(collAmount == 1000 && walletModel->getBalance() >= (COIN * 1000))
             {
-            masterNodeBalance = 1000;
+            masterNodeBalance = 1000 * COIN;
             }
-            else if (walletModel->getBalance() >= (COIN * 2500) && walletModel->getBalance() < (COIN * 3500))
+            else if (collAmount == 2500 && walletModel->getBalance() >= (COIN * 2500))
             {
-                masterNodeBalance = 2500;
-            }else if(walletModel->getBalance() >= (COIN * 3500))
+                masterNodeBalance = COIN * 2500;
+            }else if(collAmount == 3500 && walletModel->getBalance() >= (COIN * 3500))
             {
-                masterNodeBalance = 3500;
+                masterNodeBalance = collAmount * COIN;
+            }
+            else
+            {
+                 returnStr = tr("Invalid balance colatral number");
+            return false;
             }
         }
         else if(masterNodeCollateralLevel == 3)
         {
             if(walletModel->getBalance() <= (COIN * 250))
            {
-            masterNodeBalance = 250;
+            masterNodeBalance = collAmount * COIN;
+           }
+           else
+           {
+             returnStr = tr("Invalid balance colatral number");
+            return false;
            }
         }
-        SendCoinsRecipient sendCoinsRecipient(QString::fromStdString(address.ToString()), QString::fromStdString(alias),  masterNodeBalance * COIN, "");
+
+
+        printf("Masternode balance at line 232 is %ld and masterNodeCollateralLevel is %d",masterNodeBalance,masterNodeCollateralLevel);
+        SendCoinsRecipient sendCoinsRecipient(QString::fromStdString(address.ToString()), QString::fromStdString(alias),  masterNodeBalance, "");
 
         // Send the 10 tx to one of your address
         QList<SendCoinsRecipient> recipients;

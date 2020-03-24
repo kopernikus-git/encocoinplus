@@ -7,6 +7,9 @@
 #ifndef BITCOIN_QT_CLIENTMODEL_H
 #define BITCOIN_QT_CLIENTMODEL_H
 
+#include <map>
+#include "amount.h"
+#include "sync.h"
 #include "uint256.h"
 #include <QObject>
 #include <QDateTime>
@@ -37,6 +40,13 @@ enum NumConnections {
     CONNECTIONS_OUT = (1U << 1),
     CONNECTIONS_ALL = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
+
+extern CCriticalSection cs_stat;
+extern std::map<std::string, CAmount> masternodeRewards;
+extern CAmount posMin, posMax, posMedian;
+extern int block24hCount;
+extern CAmount lockedCoin;
+extern double roi1, roi2, roi3, roi4;
 
 /** Model for EPGC network client. */
 class ClientModel : public QObject
@@ -95,6 +105,7 @@ private:
 
     QTimer* pollTimer;
     QTimer* pollMnTimer;
+    QTimer* poll24hStatsTimer;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -118,6 +129,7 @@ public slots:
     void updateNumConnections(int numConnections);
     void updateAlert(const QString& hash, int status);
     void updateBanlist();
+    void update24hStatsTimer();
 };
 
 #endif // BITCOIN_QT_CLIENTMODEL_H

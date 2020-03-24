@@ -1808,10 +1808,9 @@ bool AcceptableInputs(CTxMemPool& pool, CValidationState& state, const CTransact
         int flags = STANDARD_SCRIPT_VERIFY_FLAGS;
         //if (fCLTVIsActivated)
             flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
-        if (!CheckInputs(tx, state, view, false, flags, true)) {
+        if (!CheckInputs(tx, state, view, false, flags, true, NULL, isMasternode)) {
             return error("AcceptableInputs: : ConnectInputs failed %s", hash.ToString());
         }
-
         // Check again against just the consensus-critical mandatory script
         // verification flags, in case of bugs in the standard flags that cause
         // transactions to pass as valid when they're actually invalid. For
@@ -2017,17 +2016,9 @@ int64_t GetBlockValue(int nHeight, unsigned int masternodeLevel)
     if (nHeight == 0) {
         nSubsidy = 200000 * COIN;
     }else if (nHeight >= Params().EnforMultiTierMasternode()){
-        if(masternodeLevel >=1 && masternodeLevel <=3)
-        {
-            switch(masternodeLevel)
-            {
-                case 1: return nSubsidy = 2 * COIN;
-                case 2: return nSubsidy = 6 * COIN;
-                case 3: return nSubsidy = 8 * COIN;
-            }
-        }else
-            return nSubsidy = 2 * COIN;
-    }else {
+         nSubsidy = 7 * COIN;
+    }
+    else {
         nSubsidy = 2 * COIN;
     }
     return nSubsidy;
@@ -2068,20 +2059,31 @@ int64_t GetMasternodePayment(int nHeight, unsigned masternodeLevel, int64_t bloc
     if (nHeight <= Params().LAST_POW_BLOCK()) {
         ret = 0;
     }
-    else if (nHeight < 10001) {
+    else if (nHeight > Params().LAST_POW_BLOCK() && nHeight < Params().EnforMultiTierMasternode()) {
+
         ret = blockValue * 60 / 100;
+            LogPrintf("GetMasternodePayment Blockvalue for height les then 150is %lld\n",ret);
+
     }
     else if (nHeight >= Params().EnforMultiTierMasternode()) {
         switch(masternodeLevel) {
-            case 1: return blockValue * 0.098;
-            case 2: return blockValue * 0.35;
-            case 3: return blockValue * 0.51;
+            case 1:
+            LogPrintf("Blockvalue at line 2069 is %lld\n",blockValue * 0.13);
+            return blockValue * 0.13;
+            case 2:
+            LogPrintf("Blockvalue at line 2072 is %lld\n",blockValue * 0.32);
+            return blockValue * 0.32;
+            case 3:
+            LogPrintf("Blockvalue at line 2075 is %lld\n",blockValue * 0.44);
+            return blockValue * 0.44;
         }
     }
-    else {
-        ret = blockValue * 848 / 1000;
-    }
+  /*  else {
 
+        ret = blockValue * 848 / 1000;
+        LogPrintf("GetMasternodePayment  Blockvalue at line 2082 is %lld\n",ret);
+    }*/
+    LogPrintf("GetMasternodePayment Blockvalue at line 2084 and height  is %lld :::::::::%d\n",ret,nHeight);
     return ret;
 }
 int64_t GetDevelopersPayment(int nHeight, int64_t blockValue, bool isZEPGStake) {
@@ -2092,18 +2094,22 @@ int64_t GetDevelopersPayment(int nHeight, int64_t blockValue, bool isZEPGStake) 
 
     if (nHeight <= Params().LAST_POW_BLOCK()) {
         ret = 0.0;
-    } else if (nHeight < 10001) {
+    } else if (nHeight > Params().LAST_POW_BLOCK() && nHeight < Params().EnforMultiTierMasternode()) {
         ret = blockValue * 398 / 1000;
+        LogPrintf("Developers reward at line 2097 is %lld\n",ret);
     }
 
-    else if (nHeight < Params().EnforMultiTierMasternode()){  // Added for Multitier-Architecture Updation so that before multitier activation developers get old payment
+    else if (nHeight > Params().EnforMultiTierMasternode()){  // Added for Multitier-Architecture Updation so that before multitier activation developers get old payment
         ret = blockValue * 15 / 100;
+        LogPrintf("Developers reward at enforcement height %lld\n",ret);
     }
-    else {
+    /*else {
         ret = blockValue * 55 / 1000;   //Once Masternode gets activated developers rewards becomes .55 epg
-        }
+         LogPrintf("Developers reward before enforcement height %lld\n",ret);
+        }*/
     return ret;
 }
+
 
 bool IsInitialBlockDownload()
 {
@@ -2393,7 +2399,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState& state, const CCoinsVi
             }
 
             // if prev is collateral amount, check that it's matured
-            if (!isMasternode && (coins->vout[prevout.n].nValue == 550 * COIN || coins->vout[prevout.n].nValue == 1000 * COIN || coins->vout[prevout.n].nValue == 2500 * COIN || coins->vout[prevout.n].nValue == 3500 * COIN || coins->vout[prevout.n].nValue == 250 * COIN  ))
+            if (isMasternode && (coins->vout[prevout.n].nValue == 550 * COIN || coins->vout[prevout.n].nValue == 1000 * COIN || coins->vout[prevout.n].nValue == 2500 * COIN || coins->vout[prevout.n].nValue == 3500 * COIN || coins->vout[prevout.n].nValue == 250 * COIN  ))
             {
                 if (nSpendHeight - coins->nHeight <  (coins->nHeight + Params().COLLATERAL_MATURITY()) && nSpendHeight > Params().CollateralMaturityEnforcementHeight()){
                     LockedCollateralRemainTime = (Params().COLLATERAL_MATURITY() -(nSpendHeight - coins->nHeight));
