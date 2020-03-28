@@ -58,6 +58,7 @@ static Checkpoints::MapCheckpoints mapCheckpoints =
     (15100, uint256("0x889081c8803082944ec707bfdbad1b5819d4b8dc918e44e25e406b87714bd41a"))
     (15589, uint256("0x7385f76e0dd7d33a2b94aa9abfca67bb028865196be378bfe72beb1f6331d0cb"))
     (20104, uint256("0xa0ee7c4e71b75bd086c5e7ffdde679bda468ee56c38d41fde1c118c6879f3631"))
+    (39000, uint256("0xf36469956d75be27537d3a509c3bdc4a883a605f612a956232c6813402bdfb21"))
     ; 
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
@@ -252,8 +253,7 @@ public:
         vSeeds.clear();
         vSeeds.push_back(CDNSSeedData("173.199.119.55", "173.199.119.55"));     // Primary DNS Seeder 
         vSeeds.push_back(CDNSSeedData("149.28.34.121", "149.28.34.121")); 
-        vSeeds.push_back(CDNSSeedData("149.28.235.72", "149.28.235.72"));
-        
+        vSeeds.push_back(CDNSSeedData("45.76.63.148", "45.76.63.148"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 15);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 13);
@@ -304,17 +304,15 @@ public:
 
     int GetRequiredMasternodeCollateral(int nTargetHeight) const
     {
-        if(nTargetHeight > 10000  ) {
+        if(nTargetHeight < 10001  ) {
             return 550;
-        } else if(nTargetHeight > 553600) {
-            return 3500;
-        } else if(nTargetHeight > 290800) {
-            return 2500;
-        } else if(nTargetHeight > 28000) {
-            return 1000;
+        } else if (nTargetHeight < 45501){
+            return 550;
         }
-
-        return 250;
+        else
+        {
+           return 2000;
+        }
     }
     
     CAmount StakingMinInput(int nTargetHeight) const
@@ -322,9 +320,13 @@ public:
         if(nTargetHeight < 10000) {
             return 0 * COIN;
         }
-        else
+        else if (nTargetHeight < 39000)
         {
             return 10 * COIN;
+        }
+        else
+        {
+            return 1 * COIN;
         }
     }
 

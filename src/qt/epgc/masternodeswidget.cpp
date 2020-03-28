@@ -428,7 +428,7 @@ void MasterNodesWidget::onDeleteMNClicked(){
 void MasterNodesWidget::onCreateMNClicked(){
     if(verifyWalletUnlocked()) {
         if(walletModel->getBalance() <= (COIN * walletModel->getRequiredMasternodeCollateral())){
-            inform(tr("Not enough balance to create a masternode, 550 EPG required."));
+            inform(tr("Not enough balance to create a masternode, 2000 EPG required."));
             return;
         }
         showHideOp(true);

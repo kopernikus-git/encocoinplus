@@ -2009,16 +2009,20 @@ int64_t GetBlockValue(int nHeight)
     }
 
     int64_t nSubsidy = 0;
-    if (nHeight == 0) {
+    if (nHeight == 1) {
         nSubsidy = 200000 * COIN;
-    } else if (nHeight >= 553600){
-        nSubsidy = 8 * COIN;
-    } else if (nHeight >= 290800){
-        nSubsidy = 6 * COIN;
-    } else if (nHeight >= 28000){
-        nSubsidy = 2 * COIN;
-    } else {
+    }
+    else if (nHeight < 28032) {
         nSubsidy = 1 * COIN;
+    }  
+    else if (nHeight < 45501) {
+        nSubsidy = 2 * COIN;
+    }  
+    else if (nHeight < 46033) {
+        nSubsidy = 7 * COIN;
+    }
+    else {
+        nSubsidy =  COIN * 130/100;
     }
     return nSubsidy;
 }
@@ -2035,16 +2039,15 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCou
 
     if (nHeight <= Params().LAST_POW_BLOCK()) {
         ret = 0;
-    } else if (nHeight < 10001) {
+    } 
+    else if (nHeight < 10001) {
         ret = blockValue * 60 / 100;
-    } else if (nHeight >= 553600) {
-        ret = blockValue * 94.35 / 100;
-    } else if (nHeight >= 290800) {
-        ret = blockValue * 85.8 / 100;
-    } else if (nHeight >= 28000) {
-        ret = blockValue * 72.4 / 100;
-    } else {
+    } 
+    else if (nHeight < 46032) {
         ret = blockValue * 848 / 1000;
+    } 
+    else {
+        ret =  1 * COIN;;
     }
 
     return ret;
@@ -2060,10 +2063,12 @@ int64_t GetDevelopersPayment(int nHeight, int64_t blockValue, bool isZEPGStake) 
         ret = 0.0;
     } else if (nHeight < 10001) {
         ret = blockValue * 398 / 1000;
-    } else if (nHeight >= 28000) {
-        ret = blockValue * 27.5 / 100;
-    } else {
+    }
+    else if (nHeight < 46032) {
         ret = blockValue * 15 / 100;
+    }
+    else {
+        ret = COIN *28/100;
     }
 
     return ret;
