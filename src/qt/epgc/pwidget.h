@@ -74,7 +74,7 @@ private:
     QSharedPointer<WorkerTask> task;
 
     void init();
-private slots:
+private Q_SLOTS:
     void errorString(QString, int);
 
 };
