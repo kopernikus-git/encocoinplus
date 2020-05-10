@@ -327,7 +327,7 @@ TransactionTableModel::~TransactionTableModel()
 void TransactionTableModel::updateAmountColumnTitle()
 {
     columns[Amount] = BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
-    emit headerDataChanged(Qt::Horizontal, Amount, Amount);
+    Q_EMIT headerDataChanged(Qt::Horizontal, Amount, Amount);
 }
 
 void TransactionTableModel::updateTransaction(const QString& hash, int status, bool showTransaction)
