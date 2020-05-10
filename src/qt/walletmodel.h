@@ -336,7 +336,6 @@ private:
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
     int cachedTxLocks;
-    int cachedZeromintPercentage;
 
     QTimer* pollTimer;
 
