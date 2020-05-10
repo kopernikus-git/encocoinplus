@@ -281,8 +281,6 @@ extern UniValue getzepgseed(const UniValue& params, bool fHelp);
 extern UniValue generatemintlist(const UniValue& params, bool fHelp);
 extern UniValue searchdzepg(const UniValue& params, bool fHelp);
 extern UniValue dzepgstate(const UniValue& params, bool fHelp);
-extern UniValue enableautomintaddress(const UniValue& params, bool fHelp);
-extern UniValue createautomintaddress(const UniValue& params, bool fHelp);
 
 extern UniValue getrawtransaction(const UniValue& params, bool fHelp); // in rpc/rawtransaction.cpp
 extern UniValue listunspent(const UniValue& params, bool fHelp);
