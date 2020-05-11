@@ -2007,7 +2007,7 @@ bool AppInit2()
         threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
 
         // StakeMiner thread disabled by default on regtest
-        if (GetBoolArg("-staking", !Params().IsRegTestNet())) {
+        if (GetBoolArg("-staking", true)) {
             threadGroup.create_thread(boost::bind(&ThreadStakeMinter));
         }
     }
