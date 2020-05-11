@@ -102,7 +102,6 @@ class ZerocoinSpendTest(BitcoinTestFramework):
                                 self.nodes[2].spendrawzerocoin, serial_0, randomness_0, denom_0, privkey_0, "", tx_0)
         self.log.info("GOOD: v3 spend is not possible yet.")
 
-
         # 2) stake more blocks - save a v3 spend for later (serial_1)
         serial_1, randomness_1, privkey_1, id_1, denom_1, tx_1 = get_zerocoin_data(exported_zerocoins[1])
         self.log.info("Staking 70 blocks to get to public spend activation")
