@@ -173,11 +173,11 @@ UniValue generate(const UniValue& params, bool fHelp)
             if (ShutdownRequested()) break;
             if (pblock->nNonce == std::numeric_limits<uint32_t>::max()) continue;
         }
-  
+
         CValidationState state;
         if (!ProcessNewBlock(state, nullptr, pblock))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
-        
+
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
     }
