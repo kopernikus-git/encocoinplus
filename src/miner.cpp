@@ -133,6 +133,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
     pblock->nVersion = 7;       //!> Removes accumulator checkpoints
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
+    if (Params().MineBlocksOnDemand()) {
         if (nHeight < Params().Zerocoin_StartHeight()) pblock->nVersion = 3;
         pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
     }
