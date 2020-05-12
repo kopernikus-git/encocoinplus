@@ -255,6 +255,7 @@ void CMasternodeSync::ClearFulfilledRequest()
 void CMasternodeSync::Process()
 {
     static int tick = 0;
+    const bool isRegTestNet = Params().IsRegTestNet();
 
     if (tick++ % MASTERNODE_SYNC_TIMEOUT != 0) return;
 
