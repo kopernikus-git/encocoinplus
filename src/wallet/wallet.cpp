@@ -2136,13 +2136,13 @@ bool CWallet::StakeableCoins(std::vector<COutput>* pCoins)
     CAmount nAmountSelected = 0;
     // leave some utxo for reserve balance
     for (const COutput &out : *pCoins) {
-        const CAmount& nAmountUtxo = out.tx->vout[out.i].nValue;
-        if (nAmountSelected + nAmountUtxo > nTargetAmount) continue;
-        nAmountSelected += out.tx->vout[out.i].nValue;
         
         if (out.Value() <= nMinAmount)
                 continue;
         //DEVFUND ABOVE
+        const CAmount& nAmountUtxo = out.tx->vout[out.i].nValue;
+        if (nAmountSelected + nAmountUtxo > nTargetAmount) continue;
+        nAmountSelected += out.tx->vout[out.i].nValue;
     }
     return (pCoins->size() > 0);
 }
