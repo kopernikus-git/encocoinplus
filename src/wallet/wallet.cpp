@@ -2125,7 +2125,7 @@ bool CWallet::StakeableCoins(std::vector<COutput>* pCoins)
 
     if (!AvailableCoins(pCoins, true, nullptr, false, STAKEABLE_COINS,  false, 1, fIncludeCold, false))
         return false;
-        CAmount nMinAmount = Params().StakingMinInput(chainHeight); //DEVFUND
+//DEVFUND review needed, could be deleted?        CAmount nMinAmount = Params().StakingMinInput(chainHeight);
 
     if (!pCoins || nReserveBalance == 0)
         // there is at least one stakeable utxo
@@ -2136,8 +2136,8 @@ bool CWallet::StakeableCoins(std::vector<COutput>* pCoins)
     // leave some utxo for reserve balance
     for (const COutput &out : *pCoins) {
         
-            if (out.Value() <= nMinAmount)                          //DEVFUND
-                continue;                                           //DEVFUND
+//DEVFUND review needed, could be deleted?            if (out.Value() <= nMinAmount)
+//DEVFUND review needed, could be deleted?                continue;
 
         const CAmount& nAmountUtxo = out.tx->vout[out.i].nValue;
         if (nAmountSelected + nAmountUtxo > nTargetAmount) continue;
