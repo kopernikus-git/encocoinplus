@@ -149,7 +149,7 @@ UniValue generate(const UniValue& params, bool fHelp)
     unsigned int nExtraNonce = 0;
     UniValue blockHashes(UniValue::VARR);
 
-        bool fPoS = false;
+    bool fPoS = false;
     const int last_pow_block = Params().LAST_POW_BLOCK();
     while (nHeight < nHeightEnd && !ShutdownRequested())
     {
