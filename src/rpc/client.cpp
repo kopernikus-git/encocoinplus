@@ -156,9 +156,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
         {"generatemintlist", 1},
         {"searchdzepg", 0},
         {"searchdzepg", 1},
-        {"searchdzepg", 2},
-        {"getaccumulatorvalues", 0},
-        {"getaccumulatorwitness",2},
+        {"searchdzepg", 2},,
         {"getmintsvalues", 2},
         {"enableautomintaddress", 0},
         {"getblockindexstats", 0},
@@ -171,8 +169,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
         {"getserials", 1},
         {"getserials", 2},
         {"getfeeinfo", 0},
-        {"getchecksumblock", 1},
-        {"getchecksumblock", 2},
     };
 
 class CRPCConvertTable
