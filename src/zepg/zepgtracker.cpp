@@ -10,7 +10,6 @@
 #include "txdb.h"
 #include "wallet/walletdb.h"
 #include "zepg/zepgwallet.h"
-#include "witness.h"
 
 
 CzEPGTracker::CzEPGTracker(std::string strWalletFile)
