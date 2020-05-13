@@ -178,7 +178,7 @@ public:
         nFutureTimeDriftPoW = 7200;
         nFutureTimeDriftPoS = 180;
         nMasternodeCountDrift = 20;
-        /**nMaxMoneyOut = 40000000 * COIN; moved to amount.h Line 30 **//
+        /**nMaxMoneyOut = 40000000 * COIN; moved to amount.h Line 30 **/
         nMinColdStakingAmount = 1 * COIN;
 
         nMasternodeCollateral = 200;
