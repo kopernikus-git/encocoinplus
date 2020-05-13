@@ -181,10 +181,6 @@ BITCOIN_CORE_H = \
   wallet/wallet_ismine.h \
   wallet/walletdb.h \
   zepgchain.h \
-  zepg/accumulators.h \
-  zepg/accumulatorcheckpoints.h \
-  zepg/accumulatorcheckpoints.json.h \
-  zepg/accumulatormap.h \
   zepg/deterministicmint.h \
   zepg/mintpool.h \
   zepg/witness.h \
@@ -281,7 +277,6 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/walletdb.cpp \
   zepg/deterministicmint.cpp \
   zepg/zerocoin.cpp \
-  zepg/accumulators.cpp \
   zepg/mintpool.cpp \
   zepg/witness.cpp \
   zepg/zepgwallet.cpp \
@@ -367,9 +362,6 @@ endif
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
-  zepg/accumulators.cpp \
-  zepg/accumulatorcheckpoints.cpp \
-  zepg/accumulatormap.cpp \
   allocators.cpp \
   amount.cpp \
   base58.cpp \
