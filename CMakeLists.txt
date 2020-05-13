@@ -443,9 +443,6 @@ target_include_directories(ZEROCOIN_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
         )
 
 set(COMMON_SOURCES
-        ./src/zepg/accumulators.cpp
-        ./src/zepg/accumulatorcheckpoints.cpp
-        ./src/zepg/accumulatormap.cpp
         ./src/zepg/witness.cpp
         ./src/allocators.cpp
         ./src/amount.cpp
