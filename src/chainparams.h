@@ -92,7 +92,6 @@ public:
     int FutureBlockTimeDrift(const int nHeight) const;
     bool IsValidBlockTimeStamp(const int64_t nTime, const int nHeight) const;
 
-    CAmount MaxMoneyOut() const { return nMaxMoneyOut; }
     /** The masternode count that we will allow the see-saw reward payments to be off by */
     int MasternodeCountDrift() const { return nMasternodeCountDrift; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
@@ -123,6 +122,7 @@ public:
     int64_t Budget_Fee_Confirmations() const { return nBudget_Fee_Confirmations; }
 
     CBaseChainParams::Network NetworkID() const { return networkID; }
+    bool IsRegTestNet() const { return NetworkID() == CBaseChainParams::REGTEST; }
 
     /** Zerocoin **/
     std::string Zerocoin_Modulus() const { return zerocoinModulus; }
@@ -200,7 +200,6 @@ protected:
     int nTimeSlotLength;
 
     int nModifierUpdateBlock;
-    CAmount nMaxMoneyOut;
     int nMinerThreads;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];

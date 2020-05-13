@@ -10,15 +10,15 @@
 
 #include "main.h"
 
-#include "zepg/accumulators.h"
-#include "zepg/accumulatormap.h"
 #include "addrman.h"
 #include "alert.h"
+#include "amount.h"
 #include "blocksignature.h"
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
 #include "consensus/merkle.h"
+#include "consensus/validation.h"
 #include "init.h"
 #include "kernel.h"
 #include "masternode-budget.h"
@@ -932,11 +932,6 @@ int GetIXConfirmations(uint256 nTXHash)
     return 0;
 }
 
-bool MoneyRange(CAmount nValueOut)
-{
-    return nValueOut >= 0 && nValueOut <= Params().MaxMoneyOut();
-}
-
 bool CheckZerocoinMint(const uint256& txHash, const CTxOut& txout, CValidationState& state, bool fCheckOnly)
 {
     libzerocoin::PublicCoin pubCoin(Params().Zerocoin_Params(false));
@@ -1120,23 +1115,7 @@ bool CheckZerocoinSpend(const CTransaction& tx, bool fVerifySignature, CValidati
             if (!ZEPGModule::validateInput(txin, prevOut, tx, ret)){
                 return state.DoS(100, error("CheckZerocoinSpend(): public zerocoin spend did not verify"));
             }
-        } else
-            // Skip signature verification during initial block download
-            if (fVerifySignature) {
-                //see if we have record of the accumulator used in the spend tx
-                CBigNum bnAccumulatorValue = 0;
-                if (!zerocoinDB->ReadAccumulatorValue(newSpend.getAccumulatorChecksum(), bnAccumulatorValue)) {
-                    uint32_t nChecksum = newSpend.getAccumulatorChecksum();
-                    return state.DoS(100, error("%s: Zerocoinspend could not find accumulator associated with checksum %s", __func__, HexStr(BEGIN(nChecksum), END(nChecksum))));
-                }
-
-                libzerocoin::Accumulator accumulator(Params().Zerocoin_Params(chainActive.Height() < Params().Zerocoin_Block_V2_Start()),
-                                        newSpend.getDenomination(), bnAccumulatorValue);
-
-                //Check that the coin has been accumulated
-                if(!newSpend.Verify(accumulator, !fFakeSerialAttack))
-                        return state.DoS(100, error("CheckZerocoinSpend(): zerocoin spend did not verify"));
-            }
+        }
 
         if (serials.count(newSpend.getCoinSerialNumber()))
             return state.DoS(100, error("Zerocoinspend serial is used twice in the same tx"));
@@ -1182,7 +1161,7 @@ bool CheckTransaction(const CTransaction& tx, bool fZerocoinActive, bool fReject
         if (txout.nValue < 0)
             return state.DoS(100, error("CheckTransaction() : txout.nValue negative"),
                 REJECT_INVALID, "bad-txns-vout-negative");
-        if (txout.nValue > Params().MaxMoneyOut())
+        if (txout.nValue > MAX_MONEY_OUT)
             return state.DoS(100, error("CheckTransaction() : txout.nValue too high"),
                 REJECT_INVALID, "bad-txns-vout-toolarge");
         nValueOut += txout.nValue;
@@ -1320,7 +1299,7 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
     }
 
     if (!MoneyRange(nMinFee))
-        nMinFee = Params().MaxMoneyOut();
+        nMinFee = MAX_MONEY_OUT;
     return nMinFee;
 }
 
@@ -1580,8 +1559,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState& state, const CTransa
         // As zero fee transactions are not going to be accepted in the near future (4.0) and the code will be fully refactored soon.
         // This is just a quick inline towards that goal, the mempool by default will not accept them. Blocking
         // any subsequent network relay.
-        if ((Params().NetworkID() != CBaseChainParams::REGTEST) &&
-            nFees == 0 && !hasZcSpendInputs) {
+      if (!Params().IsRegTestNet() && nFees == 0 && !hasZcSpendInputs) {
             return error("%s : zero fees not accepted %s, %d > %d",
                     __func__, hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize) * 10000);
         }
@@ -1999,7 +1977,7 @@ int64_t GetBlockValue(int nHeight)
             return 1 * COIN;
     }
 
-    if (Params().NetworkID() == CBaseChainParams::REGTEST) {
+    if (Params().IsRegTestNet()) {
         if (nHeight == 0)
             return 1 * COIN;
 
@@ -2421,6 +2399,49 @@ bool CheckInputs(const CTransaction& tx, CValidationState& state, const CCoinsVi
     return true;
 }
 
+/** Abort with a message */
+static bool AbortNode(const std::string& strMessage, const std::string& userMessage="")
+{
+    strMiscWarning = strMessage;
+    LogPrintf("*** %s\n", strMessage);
+    uiInterface.ThreadSafeMessageBox(
+        userMessage.empty() ? _("Error: A fatal internal error occured, see debug.log for details") : userMessage,
+        "", CClientUIInterface::MSG_ERROR);
+    StartShutdown();
+    return false;
+}
+
+static bool AbortNode(CValidationState& state, const std::string& strMessage, const std::string& userMessage="")
+{
+    AbortNode(strMessage, userMessage);
+    return state.Error(strMessage);
+}
+
+// Legacy Zerocoin DB: used for performance during IBD
+// (between Zerocoin_Block_V2_Start and Zerocoin_Block_Last_Checkpoint)
+void DataBaseAccChecksum(CBlockIndex* pindex, bool fWrite)
+{
+    if (!pindex ||
+            pindex->nHeight < Params().Zerocoin_Block_V2_Start() ||
+            pindex->nHeight > Params().Zerocoin_Block_Last_Checkpoint() ||
+            pindex->nAccumulatorCheckpoint == pindex->pprev->nAccumulatorCheckpoint)
+        return;
+
+    uint256 accCurr = pindex->nAccumulatorCheckpoint;
+    uint256 accPrev = pindex->pprev->nAccumulatorCheckpoint;
+    // add/remove changed checksums to/from DB
+    for (int i = (int)libzerocoin::zerocoinDenomList.size()-1; i >= 0; i--) {
+        const uint32_t& nChecksum = accCurr.Get32();
+        if (nChecksum != accPrev.Get32()) {
+            fWrite ?
+               zerocoinDB->WriteAccChecksum(nChecksum, libzerocoin::zerocoinDenomList[i], pindex->nHeight) :
+               zerocoinDB->EraseAccChecksum(nChecksum, libzerocoin::zerocoinDenomList[i]);
+        }
+        accCurr >>= 32;
+        accPrev >>= 32;
+    }
+}
+
 bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool* pfClean)
 {
     if (pindex->GetBlockHash() != view.GetBestBlock())
@@ -2558,13 +2579,9 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
 
-    if (!fVerifyingBlocks && pindex->nHeight <= Params().Zerocoin_Block_Last_Checkpoint()) {
-        //if block is an accumulator checkpoint block, remove checkpoint and checksums from db
-        uint256 nCheckpoint = pindex->nAccumulatorCheckpoint;
-        if(nCheckpoint != pindex->pprev->nAccumulatorCheckpoint) {
-            if(!EraseAccumulatorValues(nCheckpoint, pindex->pprev->nAccumulatorCheckpoint))
-                return error("DisconnectBlock(): failed to erase checkpoint");
-        }
+    if (pindex->nHeight >= Params().Zerocoin_Block_V2_Start() && pindex->nHeight <= Params().Zerocoin_Block_Last_Checkpoint()) {
+        // Legacy Zerocoin DB: If Accumulators Checkpoint is changed, remove changed checksums
+        DataBaseAccChecksum(pindex, false);
     }
 
     if (pfClean) {
@@ -2788,56 +2805,6 @@ bool RecalculateEPGSupply(int nHeightStart)
             break;
     }
     uiInterface.ShowProgress("", 100);
-    return true;
-}
-
-bool ReindexAccumulators(std::list<uint256>& listMissingCheckpoints, std::string& strError)
-{
-    // EPGC: recalculate Accumulator Checkpoints that failed to database properly
-    if (!listMissingCheckpoints.empty()) {
-        uiInterface.ShowProgress(_("Calculating missing accumulators..."), 0);
-        LogPrintf("%s : finding missing checkpoints\n", __func__);
-
-        //search the chain to see when zerocoin started
-        int nZerocoinStart = Params().Zerocoin_Block_V2_Start();
-
-        // find each checkpoint that is missing
-        CBlockIndex* pindex = chainActive[nZerocoinStart];
-        while (pindex) {
-            uiInterface.ShowProgress(_("Calculating missing accumulators..."), std::max(1, std::min(99, (int)((double)(pindex->nHeight - nZerocoinStart) / (double)(chainActive.Height() - nZerocoinStart) * 100))));
-
-            if (ShutdownRequested())
-                return false;
-
-            // find checkpoints by iterating through the blockchain beginning with the first zerocoin block
-            if (pindex->nAccumulatorCheckpoint != pindex->pprev->nAccumulatorCheckpoint) {
-                if (find(listMissingCheckpoints.begin(), listMissingCheckpoints.end(), pindex->nAccumulatorCheckpoint) != listMissingCheckpoints.end()) {
-                    uint256 nCheckpointCalculated = 0;
-                    AccumulatorMap mapAccumulators(Params().Zerocoin_Params(false));
-                    if (!CalculateAccumulatorCheckpoint(pindex->nHeight, nCheckpointCalculated, mapAccumulators)) {
-                        // GetCheckpoint could have terminated due to a shutdown request. Check this here.
-                        if (ShutdownRequested())
-                            break;
-                        strError = _("Failed to calculate accumulator checkpoint");
-                        return error("%s: %s", __func__, strError);
-                    }
-
-                    //check that the calculated checkpoint is what is in the index.
-                    if (nCheckpointCalculated != pindex->nAccumulatorCheckpoint) {
-                        LogPrintf("%s : height=%d calculated_checkpoint=%s actual=%s\n", __func__, pindex->nHeight, nCheckpointCalculated.GetHex(), pindex->nAccumulatorCheckpoint.GetHex());
-                        strError = _("Calculated accumulator checkpoint is not what is recorded by block index");
-                        return error("%s: %s", __func__, strError);
-                    }
-
-                    DatabaseChecksums(mapAccumulators);
-                    auto it = find(listMissingCheckpoints.begin(), listMissingCheckpoints.end(), pindex->nAccumulatorCheckpoint);
-                    listMissingCheckpoints.erase(it);
-                }
-            }
-            pindex = chainActive.Next(pindex);
-        }
-        uiInterface.ShowProgress("", 100);
-    }
     return true;
 }
 
@@ -3155,17 +3122,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                          REJECT_INVALID, "bad-cb-amount");
     }
 
-    // Ensure that accumulator checkpoints are valid and in the same state as this instance of the chain
-    AccumulatorMap mapAccumulators(Params().Zerocoin_Params(pindex->nHeight < Params().Zerocoin_Block_V2_Start()));
-    if (!ValidateAccumulatorCheckpoint(block, pindex, mapAccumulators)) {
-        if (!ShutdownRequested()) {
-            return state.DoS(100, error("%s: Failed to validate accumulator checkpoint for block=%s height=%d", __func__,
-                                   block.GetHash().GetHex(), pindex->nHeight), REJECT_INVALID, "bad-acc-checkpoint");
-        }
-        return error("%s: Failed to validate accumulator checkpoint for block=%s height=%d because wallet is shutting down", __func__,
-                block.GetHash().GetHex(), pindex->nHeight);
-    }
-
     if (!control.Wait())
         return state.DoS(100, error("%s: CheckQueue failed", __func__), REJECT_INVALID, "block-validation-failed");
     int64_t nTime2 = GetTimeMicros();
@@ -3183,7 +3139,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             if (!FindUndoPos(state, pindex->nFile, diskPosBlock, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 40))
                 return error("ConnectBlock() : FindUndoPos failed");
             if (!blockundo.WriteToDisk(diskPosBlock, pindex->pprev->GetBlockHash()))
-                return state.Abort("Failed to write undo data");
+                return AbortNode(state, "Failed to write undo data");
 
             // update nUndoPos in block index
             pindex->nUndoPos = diskPosBlock.nPos;
@@ -3225,17 +3181,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     // Flush spend/mint info to disk
     if (!vSpends.empty() && !zerocoinDB->WriteCoinSpendBatch(vSpends))
-        return state.Abort(("Failed to record coin serials to database"));
+        return AbortNode(state, "Failed to record coin serials to database");
 
     if (!vMints.empty() && !zerocoinDB->WriteCoinMintBatch(vMints))
-        return state.Abort(("Failed to record new mints to database"));
-
-    //Record accumulator checksums
-    DatabaseChecksums(mapAccumulators);
+        return AbortNode(state, "Failed to record new mints to database");
 
     if (fTxIndex)
         if (!pblocktree->WriteTxIndex(vPos))
-            return state.Abort("Failed to write transaction index");
+            return AbortNode(state, "Failed to write transaction index");
 
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
@@ -3262,6 +3215,15 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         auto it = mapZerocoinspends.find(txid);
         if (it != mapZerocoinspends.end())
             mapZerocoinspends.erase(it);
+    }
+
+    const int last_checkpoint_nHeight = Params().Zerocoin_Block_Last_Checkpoint();
+    if (pindex->nHeight >= Params().Zerocoin_Block_V2_Start() && pindex->nHeight < last_checkpoint_nHeight) {
+        // Legacy Zerocoin DB: If Accumulators Checkpoint is changed, database the checksums
+        DataBaseAccChecksum(pindex, true);
+    } else if (pindex->nHeight == last_checkpoint_nHeight) {
+        // After last Checkpoint block, wipe the checksum database
+        zerocoinDB->WipeAccChecksums();
     }
 
     return true;
@@ -3310,12 +3272,12 @@ bool static FlushStateToDisk(CValidationState& state, FlushStateMode mode)
                     setDirtyBlockIndex.erase(it++);
                 }
                 if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
-                    return state.Abort("Files to write to block index database");
+                    return AbortNode(state, "Files to write to block index database");
                 }
             }
             // Finally flush the chainstate (which may refer to block index entries).
             if (!pcoinsTip->Flush())
-                return state.Abort("Failed to write to coin database");
+                return AbortNode(state, "Failed to write to coin database");
             // Update best block in wallet (so we can detect restored wallets).
             if (mode != FLUSH_STATE_IF_NEEDED) {
                 GetMainSignals().SetBestChain(chainActive.GetLocator());
@@ -3323,7 +3285,7 @@ bool static FlushStateToDisk(CValidationState& state, FlushStateMode mode)
             nLastWrite = GetTimeMicros();
         }
     } catch (const std::runtime_error& e) {
-        return state.Abort(std::string("System error while flushing: ") + e.what());
+        return AbortNode(state, std::string("System error while flushing: ") + e.what());
     }
     return true;
 }
@@ -3384,7 +3346,7 @@ bool static DisconnectTip(CValidationState& state)
     // Read block from disk.
     CBlock block;
     if (!ReadBlockFromDisk(block, pindexDelete))
-        return state.Abort("Failed to read block");
+        return AbortNode(state, "Failed to read block");
     // Apply the block atomically to the chain state.
     int64_t nStart = GetTimeMicros();
     {
@@ -3441,7 +3403,7 @@ bool static ConnectTip(CValidationState& state, CBlockIndex* pindexNew, CBlock* 
     CBlock block;
     if (!pblock) {
         if (!ReadBlockFromDisk(block, pindexNew))
-            return state.Abort("Failed to read block");
+            return AbortNode(state, "Failed to read block");
         pblock = &block;
     }
     // Apply the block atomically to the chain state.
@@ -3578,7 +3540,7 @@ bool DisconnectBlockAndInputs(CValidationState& state, CTransaction txLock)
 
         CBlock block;
         if (!ReadBlockFromDisk(block, BlockReading))
-            return state.Abort(_("Failed to read block"));
+            return AbortNode(state, _("Failed to read block"));
 
         // Queue memory transactions to resurrect.
         // We only do this for blocks after the last checkpoint (reorganisation before that
@@ -4099,14 +4061,16 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
     if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits))
         return state.DoS(50, error("CheckBlockHeader() : proof of work failed"),
             REJECT_INVALID, "high-hash");
+    
+    if (Params().IsRegTestNet()) return true;
 
 /*    // Version 4 header must be used after Params().Zerocoin_StartHeight(). And never before.
     if (block.GetBlockTime() > Params().Zerocoin_StartTime()) {
-        if(block.nVersion < Params().Zerocoin_HeaderVersion() && Params().NetworkID() != CBaseChainParams::REGTEST)
+        if(block.nVersion < Params().Zerocoin_HeaderVersion())
             return state.DoS(50, error("CheckBlockHeader() : block version must be above 4 after ZerocoinStartHeight"),
             REJECT_INVALID, "block-version");
     } else {
-        if (block.nVersion >= Params().Zerocoin_HeaderVersion() && Params().NetworkID() != CBaseChainParams::REGTEST)
+        if(block.nVersion < Params().Zerocoin_HeaderVersion())
             return state.DoS(50, error("CheckBlockHeader() : block version must be below 4 before ZerocoinStartHeight"),
             REJECT_INVALID, "block-version");
     }
@@ -4339,7 +4303,7 @@ bool CheckWork(const CBlock block, CBlockIndex* const pindexPrev)
 
     unsigned int nBitsRequired = GetNextWorkRequired(pindexPrev, &block);
 
-    if ((Params().NetworkID() != CBaseChainParams::REGTEST) && block.IsProofOfWork() && (pindexPrev->nHeight + 1 <= 68589)) {
+    if (!Params().IsRegTestNet() && block.IsProofOfWork() && (pindexPrev->nHeight + 1 <= 68589)) {
         double n1 = ConvertBitsToDouble(block.nBits);
         double n2 = ConvertBitsToDouble(nBitsRequired);
 
@@ -4365,7 +4329,7 @@ bool CheckWork(const CBlock block, CBlockIndex* const pindexPrev)
 bool CheckBlockTime(const CBlockHeader& block, CValidationState& state, CBlockIndex* const pindexPrev)
 {
     // Not enforced on RegTest
-    if (Params().NetworkID() == CBaseChainParams::REGTEST)
+    if (Params().IsRegTestNet())
         return true;
 
     const int64_t blockTime = block.GetBlockTime();
@@ -4758,21 +4722,6 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
                         return state.DoS(100,error("%s: forked chain ContextualCheckZerocoinSpend failed for tx %s", __func__,
                                                    stakeTxIn.GetHash().GetHex()), REJECT_INVALID, "bad-txns-invalid-zepg");
 
-                    // Now only the ZKP left..
-                    // As the spend maturity is 200, the acc value must be accumulated, otherwise it's not ready to be spent
-                    CBigNum bnAccumulatorValue = 0;
-                    if (!zerocoinDB->ReadAccumulatorValue(spend.getAccumulatorChecksum(), bnAccumulatorValue)) {
-                        return state.DoS(100, error("%s: stake zerocoinspend not ready to be spent", __func__));
-                    }
-
-                    libzerocoin::Accumulator accumulator(Params().Zerocoin_Params(chainActive.Height() < Params().Zerocoin_Block_V2_Start()),
-                                            spend.getDenomination(), bnAccumulatorValue);
-
-                    //Check that the coinspend is valid
-                    bool isInInvalidRange = isBlockBetweenFakeSerialAttackRange(pindex->nHeight);
-                    if(!spend.Verify(accumulator, !isInInvalidRange))
-                        return state.DoS(100, error("%s: zerocoin spend did not verify", __func__));
-
                 }
             }
 
@@ -4819,11 +4768,11 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
             return error("AcceptBlock() : FindBlockPos failed");
         if (dbp == NULL)
             if (!WriteBlockToDisk(block, blockPos))
-                return state.Abort("Failed to write block");
+                return AbortNode(state, "Failed to write block");
         if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
             return error("AcceptBlock() : ReceivedBlockTransactions failed");
     } catch (const std::runtime_error& e) {
-        return state.Abort(std::string("System error: ") + e.what());
+        return AbortNode(state, std::string("System error: ") + e.what());
     }
 
     return true;
@@ -5001,18 +4950,6 @@ bool TestBlockValidity(CValidationState& state, const CBlock& block, CBlockIndex
     assert(state.IsValid());
 
     return true;
-}
-
-
-bool AbortNode(const std::string& strMessage, const std::string& userMessage)
-{
-    strMiscWarning = strMessage;
-    LogPrintf("*** %s\n", strMessage);
-    uiInterface.ThreadSafeMessageBox(
-        userMessage.empty() ? _("Error: A fatal internal error occured, see debug.log for details") : userMessage,
-        "", CClientUIInterface::MSG_ERROR);
-    StartShutdown();
-    return false;
 }
 
 bool CheckDiskSpace(uint64_t nAdditionalBytes)

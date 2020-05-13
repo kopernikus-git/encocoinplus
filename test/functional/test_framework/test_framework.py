@@ -725,9 +725,6 @@ class BitcoinTestFramework():
                 assert_equal(zcBalance['Immature'], 0)
                 if peer == 2:
                     assert_equal(len(zclist), len(zclist_spendable))
-                else:
-                    # last mints added on accumulators - not spendable
-                    assert_equal(0, len(zclist_spendable))
                 assert_equal(set([x['denomination'] for x in zclist]), set(vZC_DENOMS))
                 assert_equal([x['confirmations'] for x in zclist], [30-peer] * len(vZC_DENOMS))
 
@@ -766,17 +763,8 @@ class BitcoinTestFramework():
                 prevouts[outPoint.serialize_uniqueness()] = (outValue, prevScript, prevTime)
 
             else:
-                # get mint checkpoint
-                if nHeight == -1:
-                    nHeight = rpc_conn.getblockcount()
-                checkpointBlock = rpc_conn.getblock(rpc_conn.getblockhash(nHeight), True)
-                checkpoint = int(checkpointBlock['acc_checkpoint'], 16)
-                # parse checksum and get checksumblock time
-                pos = vZC_DENOMS.index(utxo['denomination'])
-                checksum = (checkpoint >> (32 * (len(vZC_DENOMS) - 1 - pos))) & 0xFFFFFFFF
-                prevTime = rpc_conn.getchecksumblock(hex(checksum), utxo['denomination'], True)['time']
                 uniqueness = bytes.fromhex(utxo['hash stake'])[::-1]
-                prevouts[uniqueness] = (int(utxo["denomination"]) * COIN, utxo["serial hash"], prevTime)
+                prevouts[uniqueness] = (int(utxo["denomination"]) * COIN, utxo["serial hash"], 0)
 
         return prevouts
 
@@ -1013,20 +1001,25 @@ class BitcoinTestFramework():
         """ stakes a block using generate on nodes[node_id]"""
         assert_greater_than(len(self.nodes), node_id)
         rpc_conn = self.nodes[node_id]
+        ss = rpc_conn.getstakingstatus()
+        assert ss["walletunlocked"]
+        assert ss["stakeablecoins"]
         if btime is not None:
             next_btime = btime + 60
         fStaked = False
+        failures = 0
         while not fStaked:
             try:
                 rpc_conn.generate(1)
                 fStaked = True
             except JSONRPCException as e:
                 if ("Couldn't create new block" in str(e)):
-                    # couldn't generate block. check that this node can stake
-                    ss = rpc_conn.getstakingstatus()
-                    if not (ss["validtime"] and ss["haveconnections"] and ss["walletunlocked"] and
-                            ss["mintablecoins"] and ss["enoughcoins"]):
-                        raise AssertionError("Node %d unable to stake!" % node_id)
+                    failures += 1
+                    # couldn't generate block. check that this node can still stake (after 60 failures)
+                    if failures > 60:
+                        ss = rpc_conn.getstakingstatus()
+                        if not (ss["walletunlocked"] and ss["stakeablecoins"]):
+                            raise AssertionError("Node %d unable to stake!" % node_id)
                     # try to stake one sec in the future
                     if btime is not None:
                         btime += 1

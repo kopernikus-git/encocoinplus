@@ -178,7 +178,7 @@ public:
         nFutureTimeDriftPoW = 7200;
         nFutureTimeDriftPoS = 180;
         nMasternodeCountDrift = 20;
-        nMaxMoneyOut = 40000000 * COIN;
+        /**nMaxMoneyOut = 40000000 * COIN; moved to amount.h Line 30 **/
         nMinColdStakingAmount = 1 * COIN;
 
         nMasternodeCollateral = 200;
@@ -365,7 +365,6 @@ public:
         nStakeMinDepth = 100;
         nMasternodeCountDrift = 4;
         nModifierUpdateBlock = 51197; //approx Mon, 17 Apr 2017 04:00:00 GMT
-        nMaxMoneyOut = 43199500 * COIN;
         nZerocoinStartHeight = 201576;
         nZerocoinStartTime = 1501776000;
         nBlockEnforceSerialRange = 1; //Enforce serial range starting this block
@@ -490,7 +489,6 @@ public:
         nStakeMinDepth = 0;
         nMasternodeCountDrift = 4;
         nModifierUpdateBlock = 0;       //approx Mon, 17 Apr 2017 04:00:00 GMT
-        nMaxMoneyOut = 43199500 * COIN;
         nZerocoinStartHeight = 300;
         nBlockZerocoinV2 = 300;
         nZerocoinStartTime = 1501776000;
@@ -505,8 +503,8 @@ public:
         nPublicZCSpends = 350;
 
         // Blocks v7
-        nBlockV7StartHeight = nPublicZCSpends + 1;
-        nBlockLastAccumulatorCheckpoint = nPublicZCSpends - 10;
+        nBlockV7StartHeight = nBlockZerocoinV2;
+        nBlockLastAccumulatorCheckpoint = nBlockZerocoinV2-1; // no accumul. checkpoints check on regtest
 
         // New P2P messages signatures
         nBlockEnforceNewMessageSignatures = 1;

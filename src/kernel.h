@@ -24,7 +24,6 @@ bool GetKernelStakeModifier(const uint256& hashBlockFrom, uint64_t& nStakeModifi
 bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nStakeModifier, bool& fGeneratedStakeModifier);
 uint256 ComputeStakeModifier(const CBlockIndex* pindexPrev, const uint256& kernel);
 bool Stake(const CBlockIndex* pindexPrev, CStakeInput* stakeInput, unsigned int nBits, int64_t& nTimeTx, uint256& hashProofOfStake);
-bool StakeV1(const CBlockIndex* pindexPrev, CStakeInput* stakeInput, const uint32_t nTimeBlockFrom, unsigned int nBits, int64_t& nTimeTx, uint256& hashProofOfStake);
 
 // Initialize the stake input object
 bool initStakeInput(const CBlock& block, std::unique_ptr<CStakeInput>& stake, int nPreviousBlockHeight);
@@ -41,9 +40,8 @@ unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex);
 // Check stake modifier hard checkpoints
 bool CheckStakeModifierCheckpoints(int nHeight, unsigned int nStakeModifierChecksum);
 
-bool ContextualCheckZerocoinStake(int nPreviousBlockHeight, CStakeInput* stake);
-
 int64_t GetTimeSlot(const int64_t nTime);
 int64_t GetCurrentTimeSlot();
+uint32_t ParseAccChecksum(uint256 nCheckpoint, const libzerocoin::CoinDenomination denom);
 
 #endif // BITCOIN_KERNEL_H

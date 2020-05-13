@@ -14,7 +14,6 @@
 #include "stakeinput.h"
 #include "utilmoneystr.h"
 #include "zepgchain.h"
-#include "zepg/accumulators.h"
 
 // v1 modifier interval.
 static const int64_t OLD_MODIFIER_INTERVAL = 2087;
@@ -119,7 +118,7 @@ uint256 ComputeStakeModifier(const CBlockIndex* pindexPrev, const uint256& kerne
 {
     // genesis block's modifier is 0
     // all block's modifiers are 0 on regtest
-    if (!pindexPrev || Params().NetworkID() == CBaseChainParams::REGTEST)
+    if (!pindexPrev || Params().IsRegTestNet())
         return uint256();
 
     CHashWriter ss(SER_GETHASH, 0);
@@ -153,7 +152,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nStakeMod
     fGeneratedStakeModifier = false;
 
     // modifier 0 on RegTest
-    if (Params().NetworkID() == CBaseChainParams::REGTEST) {
+    if (Params().IsRegTestNet()) {
         return true;
     }
     if (!pindexPrev) {
@@ -250,7 +249,7 @@ bool GetKernelStakeModifier(const uint256& hashBlockFrom, uint64_t& nStakeModifi
 {
     nStakeModifier = 0;
     // modifier 0 on RegTest
-    if (Params().NetworkID() == CBaseChainParams::REGTEST) {
+    if (Params().IsRegTestNet()) {
         return true;
     }
     if (!mapBlockIndex.count(hashBlockFrom))
@@ -259,7 +258,7 @@ bool GetKernelStakeModifier(const uint256& hashBlockFrom, uint64_t& nStakeModifi
     nStakeModifierHeight = pindexFrom->nHeight;
     nStakeModifierTime = pindexFrom->GetBlockTime();
     // Fixed stake modifier only for regtest
-    if (Params().NetworkID() == CBaseChainParams::REGTEST) {
+    if (Params().IsRegTestNet()) {
         nStakeModifier = pindexFrom->nStakeModifier;
         return true;
     }
@@ -365,84 +364,42 @@ bool Stake(const CBlockIndex* pindexPrev, CStakeInput* stakeInput, unsigned int 
     CBlockIndex* pindexFrom = stakeInput->GetIndexFrom();
     if (!pindexFrom || pindexFrom->nHeight < 1) return error("%s : no pindexfrom", __func__);
 
-    // Time protocol V2: one-try
-    if (Params().IsTimeProtocolV2(nHeight)) {
-        // check required min depth for stake
-        const int nHeightBlockFrom = pindexFrom->nHeight;
-        if (nHeight < nHeightBlockFrom + Params().COINSTAKE_MIN_DEPTH())
-            return error("%s : min depth violation, nHeight=%d, nHeightBlockFrom=%d", __func__, nHeight, nHeightBlockFrom);
+    // check required min depth for stake
+    const int nHeightBlockFrom = pindexFrom->nHeight;
+    if (nHeight < nHeightBlockFrom + Params().COINSTAKE_MIN_DEPTH())
+        return error("%s : min depth violation, nHeight=%d, nHeightBlockFrom=%d", __func__, nHeight, nHeightBlockFrom);
 
-        nTimeTx = GetCurrentTimeSlot();
-        // double check that we are not on the same slot as prev block
-        if (nTimeTx <= pindexPrev->nTime && Params().NetworkID() != CBaseChainParams::REGTEST)
-            return false;
+    nTimeTx = (Params().IsRegTestNet() ? GetAdjustedTime() : GetCurrentTimeSlot());
+    // double check that we are not on the same slot as prev block
+    if (nTimeTx <= pindexPrev->nTime) return false;
 
-        // check stake kernel
-        return CheckStakeKernelHash(pindexPrev, nBits, stakeInput, nTimeTx, hashProofOfStake);
-    }
-
-    // Time protocol V1: iterate the hashing (can be removed after hard-fork)
-    const uint32_t nTimeBlockFrom = pindexFrom->nTime;
-    return StakeV1(pindexPrev, stakeInput, nTimeBlockFrom, nBits, nTimeTx, hashProofOfStake);
+    // check stake kernel
+    return CheckStakeKernelHash(pindexPrev, nBits, stakeInput, nTimeTx, hashProofOfStake);
 }
 
-bool StakeV1(const CBlockIndex* pindexPrev, CStakeInput* stakeInput, const uint32_t nTimeBlockFrom, unsigned int nBits, int64_t& nTimeTx, uint256& hashProofOfStake)
+uint32_t ParseAccChecksum(uint256 nCheckpoint, const libzerocoin::CoinDenomination denom)
 {
-    bool fSuccess = false;
-    // iterate from maxTime down to pindexPrev->nTime (or min time due to maturity, 60 min after blockFrom)
-    const unsigned int prevBlockTime = pindexPrev->nTime;
-    const unsigned int maxTime = pindexPrev->MaxFutureBlockTime();
-    unsigned int minTime = std::max(prevBlockTime, nTimeBlockFrom + 3600);
-    if (Params().NetworkID() == CBaseChainParams::REGTEST)
-        minTime = prevBlockTime;
-    unsigned int nTryTime = maxTime;
-
-    if (maxTime <= minTime) {
-        // too early to stake
-        return false;
-    }
-
-    while (nTryTime > minTime) {
-        //new block came in, move on
-        if (chainActive.Height() != pindexPrev->nHeight) break;
-
-        --nTryTime;
-        // if stake hash does not meet the target then continue to next iteration
-        if (!CheckStakeKernelHash(pindexPrev, nBits, stakeInput, nTryTime, hashProofOfStake))
-             continue;
-
-        // if we made it this far, then we have successfully found a valid kernel hash
-        fSuccess = true;
-        break;
-    }
-
-    nTimeTx = nTryTime;
-    return fSuccess;
+    int pos = distance(libzerocoin::zerocoinDenomList.begin(),
+            find(libzerocoin::zerocoinDenomList.begin(), libzerocoin::zerocoinDenomList.end(), denom));
+    nCheckpoint = nCheckpoint >> (32*((libzerocoin::zerocoinDenomList.size() - 1) - pos));
+    return nCheckpoint.Get32();
 }
 
+/* Only for IBD (between Zerocoin_Block_V2_Start and Zerocoin_Block_Last_Checkpoint) */
 bool ContextualCheckZerocoinStake(int nPreviousBlockHeight, CStakeInput* stake)
 {
-    if (nPreviousBlockHeight < Params().Zerocoin_Block_V2_Start())
-        return error("%s : zEPG stake block is less than allowed start height", __func__);
+    if (nPreviousBlockHeight < Params().Zerocoin_Block_V2_Start() ||
+            nPreviousBlockHeight > Params().Zerocoin_Block_Last_Checkpoint())
+        return error("%s : zEPG stake block: height %d outside range", __func__, (nPreviousBlockHeight+1));
 
-    if (CZEpgStake* zEPG = dynamic_cast<CZEpgStake*>(stake)) {
-        CBlockIndex* pindexFrom = zEPG->GetIndexFrom();
-        if (!pindexFrom)
-            return error("%s : failed to get index associated with zEPG stake checksum", __func__);
+    CZEpgStake* zEPG = dynamic_cast<CZEpgStake*>(stake);
+    if (!zEPG) return error("%s : dynamic_cast of stake ptr failed", __func__);
 
-        int depth = (nPreviousBlockHeight + 1) - pindexFrom->nHeight;
-        if (depth < Params().Zerocoin_RequiredStakeDepth())
-            return error("%s : zEPG stake does not have required confirmation depth. Current height %d,  stakeInput height %d.", __func__, nPreviousBlockHeight, pindexFrom->nHeight);
-
-        //The checksum needs to be the exact checksum from 200 blocks ago or latest checksum
-        const int checkpointHeight = std::min(Params().Zerocoin_Block_Last_Checkpoint(), (nPreviousBlockHeight - Params().Zerocoin_RequiredStakeDepth()));
-        uint256 nCheckpoint200 = chainActive[checkpointHeight]->nAccumulatorCheckpoint;
-        uint32_t nChecksum200 = ParseChecksum(nCheckpoint200, libzerocoin::AmountToZerocoinDenomination(zEPG->GetValue()));
-        if (nChecksum200 != zEPG->GetChecksum())
-            return error("%s : accumulator checksum is different than the block 200 blocks previous. stake=%d block200=%d", __func__, zEPG->GetChecksum(), nChecksum200);
-    } else {
-        return error("%s : dynamic_cast of stake ptr failed", __func__);
-    }
+    // The checkpoint needs to be from 200 blocks ago
+    const int cpHeight = nPreviousBlockHeight - Params().Zerocoin_RequiredStakeDepth();
+    const libzerocoin::CoinDenomination denom = libzerocoin::AmountToZerocoinDenomination(zEPG->GetValue());
+    if (ParseAccChecksum(chainActive[cpHeight]->nAccumulatorCheckpoint, denom) != zEPG->GetChecksum())
+        return error("%s : accum. checksum at height %d is wrong.", __func__, (nPreviousBlockHeight+1));
 
     return true;
 }
@@ -462,9 +419,9 @@ bool initStakeInput(const CBlock& block, std::unique_ptr<CStakeInput>& stake, in
             return error("%s : spend is using the wrong SpendType (%d)", __func__, (int)spend.getSpendType());
 
         stake = std::unique_ptr<CStakeInput>(new CZEpgStake(spend));
-
         if (!ContextualCheckZerocoinStake(nPreviousBlockHeight, stake.get()))
             return error("%s : staked zEPG fails context checks", __func__);
+        
     } else {
         // First try finding the previous transaction in database
         uint256 hashBlock;
