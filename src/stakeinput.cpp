@@ -18,7 +18,7 @@ bool CEpgStake::SetInput(CTransaction txPrev, unsigned int n)
     return true;
 }
 
-bool CPivStake::GetTxFrom(CTransaction& tx) const
+bool CEpgStake::GetTxFrom(CTransaction& tx) const
 {
     tx = txFrom;
     return true;
@@ -30,7 +30,7 @@ bool CEpgStake::CreateTxIn(CWallet* pwallet, CTxIn& txIn, uint256 hashTxOut)
     return true;
 }
 
-CAmount CPivStake::GetValue() const
+CAmount CEpgStake::GetValue() const
 {
     return txFrom.vout[nPosition].nValue;
 }
@@ -83,7 +83,7 @@ bool CEpgStake::CreateTxOuts(CWallet* pwallet, std::vector<CTxOut>& vout, CAmoun
     return true;
 }
 
-CDataStream CPivStake::GetUniqueness() const
+CDataStream CEpgStake::GetUniqueness() const
 {
     //The unique identifier for a EPG stake is the outpoint
     CDataStream ss(SER_NETWORK, 0);
