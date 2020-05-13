@@ -37,7 +37,6 @@
 #include <boost/thread.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <zepg/witness.h>
 
 
 /**
@@ -3979,31 +3978,6 @@ bool CWallet::CreateZerocoinMintTransaction(const CAmount nValue, CMutableTransa
                 return false;
             }
         }
-    }
-
-    return true;
-}
-
-bool CWallet::CheckCoinSpend(libzerocoin::CoinSpend& spend, libzerocoin::Accumulator& accumulator, CZerocoinSpendReceipt& receipt)
-{
-    if (!spend.Verify(accumulator)) {
-        receipt.SetStatus(_("The transaction did not verify"), ZEPG_BAD_SERIALIZATION);
-        return error("%s : The transaction did not verify", __func__);
-    }
-
-    if (IsSerialKnown(spend.getCoinSerialNumber())) {
-        //Tried to spend an already spent zEPG
-        receipt.SetStatus(_("The coin spend has been used"), ZEPG_SPENT_USED_ZEPG);
-        uint256 hashSerial = GetSerialHash(spend.getCoinSerialNumber());
-        if(!zepgTracker->HasSerialHash(hashSerial))
-            return error("%s: serialhash %s not found in tracker", __func__, hashSerial.GetHex());
-
-        CMintMeta meta = zepgTracker->Get(hashSerial);
-        meta.isUsed = true;
-        if (!zepgTracker->UpdateState(meta))
-            LogPrintf("%s: failed to write zerocoinmint\n", __func__);
-
-        return false;
     }
 
     return true;
