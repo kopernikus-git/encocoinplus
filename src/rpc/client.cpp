@@ -156,7 +156,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
         {"generatemintlist", 1},
         {"searchdzepg", 0},
         {"searchdzepg", 1},
-        {"searchdzepg", 2},,
+        {"searchdzepg", 2},
         {"getmintsvalues", 2},
         {"enableautomintaddress", 0},
         {"getblockindexstats", 0},
