@@ -390,15 +390,15 @@ bool ContextualCheckZerocoinStake(int nPreviousBlockHeight, CStakeInput* stake)
 {
     if (nPreviousBlockHeight < Params().Zerocoin_Block_V2_Start() ||
             nPreviousBlockHeight > Params().Zerocoin_Block_Last_Checkpoint())
-        return error("%s : zPIV stake block: height %d outside range", __func__, (nPreviousBlockHeight+1));
+        return error("%s : zEPG stake block: height %d outside range", __func__, (nPreviousBlockHeight+1));
 
-    CZPivStake* zPIV = dynamic_cast<CZPivStake*>(stake);
-    if (!zPIV) return error("%s : dynamic_cast of stake ptr failed", __func__);
+    CZEpgStake* zEPG = dynamic_cast<CZEpgStake*>(stake);
+    if (!zEPG) return error("%s : dynamic_cast of stake ptr failed", __func__);
 
     // The checkpoint needs to be from 200 blocks ago
     const int cpHeight = nPreviousBlockHeight - Params().Zerocoin_RequiredStakeDepth();
-    const libzerocoin::CoinDenomination denom = libzerocoin::AmountToZerocoinDenomination(zPIV->GetValue());
-    if (ParseAccChecksum(chainActive[cpHeight]->nAccumulatorCheckpoint, denom) != zPIV->GetChecksum())
+    const libzerocoin::CoinDenomination denom = libzerocoin::AmountToZerocoinDenomination(zEPG->GetValue());
+    if (ParseAccChecksum(chainActive[cpHeight]->nAccumulatorCheckpoint, denom) != zEPG->GetChecksum())
         return error("%s : accum. checksum at height %d is wrong.", __func__, (nPreviousBlockHeight+1));
 
     return true;
