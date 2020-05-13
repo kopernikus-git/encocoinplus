@@ -83,7 +83,7 @@ public:
     }
 private:
     CBigNum S1, S2, S3, challenge;
-}
+};
 
 
 // Lagacy zEPG - Only for serialization
