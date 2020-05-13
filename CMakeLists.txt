@@ -357,6 +357,7 @@ set(WALLET_SOURCES
         ./src/zepg/zepgwallet.cpp
         ./src/zepg/zepgtracker.cpp
         ./src/zepg/zepgmodule.cpp
+        ./src/zepg/zpos.cpp
         ./src/stakeinput.cpp
         )
 add_library(WALLET_A STATIC ${BitcoinHeaders} ${WALLET_SOURCES})
