@@ -190,6 +190,7 @@ BITCOIN_CORE_H = \
   zepg/zepgtracker.h \
   zepg/zepgwallet.h \
   zepg/zepgmodule.h \
+  zepg/zpos.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h \
   zmq/zmqnotificationinterface.h \
@@ -285,6 +286,7 @@ libbitcoin_wallet_a_SOURCES = \
   zepg/zepgtracker.cpp \
   stakeinput.cpp \
   zepg/zepgmodule.cpp \
+  zepg/zpos.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library

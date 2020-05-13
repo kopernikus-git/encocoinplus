@@ -161,11 +161,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
         if (!GetHashProofOfStake(blockindex->pprev, stake.get(), nTxTime, false, hashProofOfStakeRet))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Cannot get proof of stake hash");
 
-        UniValue stakeData(UniValue::VOBJ);
-        stakeData.push_back(Pair("hashProofOfStake", hashProofOfStakeRet.GetHex()));
-        stakeData.push_back(Pair("stakeModifierHeight", ((stake->IsZEPG()) ? "Not available" : std::to_string(
-                stake->getStakeModifierHeight()))));
-        result.push_back(Pair("CoinStake", stakeData));
+        result.push_back(Pair("hashProofOfStake", hashProofOfStakeRet.GetHex()));
     }
 
     return result;
@@ -205,10 +201,8 @@ UniValue getbestblockhash(const UniValue& params, bool fHelp)
     return chainActive.Tip()->GetBlockHash().GetHex();
 }
 
-void RPCNotifyBlockChange(const uint256 hashBlock)
+void RPCNotifyBlockChange(bool fInitialDownload, const CBlockIndex* pindex)
 {
-    CBlockIndex* pindex = nullptr;
-    pindex = mapBlockIndex.at(hashBlock);
     if(pindex) {
         std::lock_guard<std::mutex> lock(cs_blockchange);
         latestblock.hash = pindex->GetBlockHash();
@@ -521,9 +515,7 @@ UniValue getblock(const UniValue& params, bool fHelp)
             "     \"5000\" : n,         (numeric) supply of 5000 zEPG denomination\n"
             "     \"total\" : n,        (numeric) The total supply of all zEPG denominations\n"
             "  },\n"
-            "  \"CoinStake\" :\n"
-            "    \"hashProofOfStake\" : \"hash\",   (string) Proof of Stake hash\n"
-            "    \"stakeModifierHeight\" : \"nnn\"  (string) Stake modifier block height\n"
+            "  \"hashProofOfStake\" : \"hash\",   (string) Proof of Stake hash\n"
             "  }\n"
             "}\n"
 
