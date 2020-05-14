@@ -76,8 +76,8 @@ std::condition_variable g_best_block_cv;
 uint256 g_best_block;
 
 int nScriptCheckThreads = 0;
-bool fImporting = false;
-bool fReindex = false;
+std::atomic<bool> fImporting{false};
+std::atomic<bool> fReindex{false};
 bool fTxIndex = true;
 bool fIsBareMultisigStd = true;
 bool fCheckBlockIndex = false;
@@ -3874,10 +3874,12 @@ bool CheckColdStakeFreeOutput(const CTransaction& tx, const int nHeight)
         if (lastOut.nValue == 3 * COIN)
             return true;
 
-        if (budget.IsBudgetPaymentBlock(nHeight) &
-                sporkManager.IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) &&
-                sporkManager.IsSporkActive(SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT))
-            return true;
+        if (budget.IsBudgetPaymentBlock(nHeight)) {
+            // if this is a budget payment, check that SPORK_9 and SPORK_13 are active (if spork list synced)
+            return (!masternodeSync.IsSporkListSynced() ||
+                    (sporkManager.IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) &&
+                    sporkManager.IsSporkActive(SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT)));
+        }
 
         return error("%s: Wrong cold staking outputs: vout[%d].scriptPubKey (%s) != vout[%d].scriptPubKey (%s) - value: %s",
                 __func__, outs-1, HexStr(lastOut.scriptPubKey), outs-2, HexStr(tx.vout[outs-2].scriptPubKey), FormatMoney(lastOut.nValue).c_str());
@@ -4014,7 +4016,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
             }
         } else {
             if (fDebug)
-                LogPrintf("%s: Masternode payment check skipped on sync - skipping IsBlockPayeeValid()\n", __func__);
+                LogPrintf("%s: Masternode/Budget payment checks skipped on sync\n", __func__);
         }
     }
 
@@ -4888,7 +4890,7 @@ bool static LoadBlockIndexDB(std::string& strError)
     // Check whether we need to continue reindexing
     bool fReindexing = false;
     pblocktree->ReadReindexing(fReindexing);
-    fReindex |= fReindexing;
+    if(fReindexing) fReindex = true;
 
     // Check whether we have a transaction index
     pblocktree->ReadFlag("txindex", fTxIndex);
@@ -5065,8 +5067,6 @@ bool InitBlockIndex()
             if (!WriteBlockToDisk(block, blockPos))
                 return error("LoadBlockIndex() : writing genesis block to disk failed");
             CBlockIndex* pindex = AddToBlockIndex(block);
-            if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
-                return error("LoadBlockIndex() : genesis block not accepted");
             if (!ActivateBestChain(state, &block))
                 return error("LoadBlockIndex() : genesis block cannot be activated");
             // Force a chainstate write so that when we VerifyDB in a moment, it doesnt check stale data
