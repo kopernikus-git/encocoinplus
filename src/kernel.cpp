@@ -368,7 +368,6 @@ bool GetOldModifier(const uint256& hashBlockFrom, uint64_t& nStakeModifier)
         return error("%s : block not indexed", __func__);
     const CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
     int64_t nStakeModifierTime = pindexFrom->GetBlockTime();
-    }
     const CBlockIndex* pindex = pindexFrom;
     CBlockIndex* pindexNext = chainActive[pindex->nHeight + 1];
 
