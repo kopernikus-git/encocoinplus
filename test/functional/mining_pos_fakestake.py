@@ -10,9 +10,7 @@ Two nodes: nodes[0] moves the chain and checks the spam blocks, nodes[1] sends t
 Spend txes sent from nodes[1] are received by nodes[0]
 Start with the PoW chache: 200 blocks.
 For each test, nodes[1] sends 3 blocks.
-
 At the beginning nodes[0] mines 50 blocks (201-250) to reach PoS activation.
-
 ** Test_1:
 (Nodes[1] spams a PoS block on main chain.)
 (Stake inputs spent on the same block being staked.)
@@ -21,7 +19,6 @@ At the beginning nodes[0] mines 50 blocks (201-250) to reach PoS activation.
   - nodes[0] mines 5 blocks (251-255) to be used as buffer for adding the fork chain later
   - nodes[1] spams 3 blocks with height 256 --> [REJECTED]
 --> ends at height 255
-
 ** Test_2
 (Nodes[1] spams a PoS block on main chain.)
 (Stake inputs spent earlier on main chain.)
@@ -30,7 +27,6 @@ At the beginning nodes[0] mines 50 blocks (201-250) to reach PoS activation.
   - nodes[0] mines 5 more blocks (256-260) to include the spends
   - nodes[1] spams 3 blocks with height 261 --> [REJECTED]
 --> ends at height 260
-
 ** Test_3:
 (Nodes[1] spams PoS blocks on a forked chain.)
 (Stake inputs spent later on main chain.)
@@ -48,7 +44,7 @@ from time import sleep
 
 from test_framework.authproxy import JSONRPCException
 from test_framework.messages import COutPoint
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import EpgcTestFramework
 from test_framework.util import (
     sync_blocks,
     assert_equal,
@@ -57,7 +53,7 @@ from test_framework.util import (
 )
 
 
-class FakeStakeTest(BitcoinTestFramework):
+class FakeStakeTest(EpgcTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         # nodes[0] moves the chain and checks the spam blocks, nodes[1] sends them
@@ -172,7 +168,13 @@ class FakeStakeTest(BitcoinTestFramework):
                   fDoubleSpend:       (bool) if true, stake input is double spent in block.vtx
         :return:
         """
-        # Get block number, block time and prevBlock hash
+        def get_prev_modifier(prevBlockHash):
+            prevBlock = self.nodes[1].getblock(prevBlockHash)
+            if prevBlock['height'] > 250:
+                return prevBlock['stakeModifier']
+            return "0"
+
+        # Get block number, block time and prevBlock hash and modifier
         currHeight = self.nodes[1].getblockcount()
         isMainChain = (nHeight == -1)
         chainName = "main" if isMainChain else "forked"
@@ -180,6 +182,7 @@ class FakeStakeTest(BitcoinTestFramework):
         if isMainChain:
             nHeight = currHeight + 1
         prevBlockHash = self.nodes[1].getblockhash(nHeight - 1)
+        prevModifier = get_prev_modifier(prevBlockHash)
         nTime += (nHeight - currHeight) * 60
 
         # New block hash, coinstake input and list of txes
@@ -199,6 +202,7 @@ class FakeStakeTest(BitcoinTestFramework):
                 nHeight += 1
                 nTime += 60
                 prevBlockHash = bHash
+                prevModifier = get_prev_modifier(prevBlockHash)
 
             stakeInputs = self.get_prevouts(1, staking_utxo_list, False, nHeight - 1)
             # Update stake inputs for second block sent on forked chain (must stake the same input)
@@ -211,7 +215,7 @@ class FakeStakeTest(BitcoinTestFramework):
                 block_txes = self.make_txes(1, spending_prevouts, self.DUMMY_KEY.get_pubkey())
 
             # Stake the spam block
-            block = self.stake_block(1, nHeight, prevBlockHash, stakeInputs,
+            block = self.stake_block(1, nHeight, prevBlockHash, prevModifier, stakeInputs,
                                      nTime, "", block_txes, fDoubleSpend)
             # Log stake input
             prevout = COutPoint()
