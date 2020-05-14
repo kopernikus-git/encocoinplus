@@ -337,7 +337,7 @@ int calculateChange(
         libzerocoin::CoinDenomination nextToMaxDenom = getNextLowerDenomHeld(minDenomOverTarget, mapOfDenomsHeld);
         int newChangeCount = minimizeChange(nMaxNumberOfSpends, nChangeCount,
                                             nextToMaxDenom, nValueTarget,
-                                            mapOfDenomsHeld, mapOfDenomsUsed)
+                                            mapOfDenomsHeld, mapOfDenomsUsed);
 
         // Alternative method yields less mints and is less than MaxNumberOfSpends if true
         if (newChangeCount < nChangeCount) return newChangeCount;
@@ -347,7 +347,6 @@ int calculateChange(
             mapOfDenomsUsed.at(denom) = 0;
         // Then reset as before previous clearing
         mapOfDenomsUsed.at(minDenomOverTarget) = 1;
-        }
 
         return nChangeCount;
 
