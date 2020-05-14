@@ -204,8 +204,6 @@ public:
     bool createZepgSpend(
             CWalletTx &wtxNew,
             std::vector<CZerocoinMint> &vMintsSelected,
-            bool fMintChange,
-            bool fMinimizeChange,
             CZerocoinSpendReceipt &receipt,
             std::list<std::pair<CBitcoinAddress*, CAmount>> outputs,
             std::string changeAddress = ""
@@ -213,8 +211,6 @@ public:
 
     bool sendZepg(
             std::vector<CZerocoinMint> &vMintsSelected,
-            bool fMintChange,
-            bool fMinimizeChange,
             CZerocoinSpendReceipt &receipt,
             std::list<std::pair<CBitcoinAddress*, CAmount>> outputs,
             std::string changeAddress = ""
@@ -223,8 +219,6 @@ public:
     bool convertBackZepg(
             CAmount value,
             std::vector<CZerocoinMint> &vMintsSelected,
-            bool fMintChange,
-            bool fMinimizeChange,
             CZerocoinSpendReceipt &receipt
     );
 

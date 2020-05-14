@@ -452,8 +452,6 @@ bool SendWidget::sendZepg(QList<SendCoinsRecipient> recipients){
 
     if (walletModel->sendZepg(
             vMintsSelected,
-            true,
-            true,
             receipt,
             outputs,
             changeAddress
