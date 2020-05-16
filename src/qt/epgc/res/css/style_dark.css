@@ -596,6 +596,35 @@ QPushButton[cssClass="btn-check-status-unlock"] {
     border-radius:2px;
 }
 
+/* Tor status*/
+
+QPushButton[cssClass="btn-check-tor"] {
+    qproperty-icon: url("://ic-check-tor") ;
+    qproperty-iconSize: 24px 24px;
+    color:#ffffff;
+    background-color:#507c7d4b;
+    border-bottom:2px solid #fbff88;
+    border-radius:2px;
+}
+
+
+QPushButton[cssClass="btn-check-tor-inactive"] {
+    qproperty-icon: url("://ic-check-tor-off");
+    qproperty-iconSize: 24px 24px;
+    color:#B3FFFFFF;
+    background-color:#407c7d4b;
+    border-bottom:2px solid #9c9341;
+    border-radius:2px;
+}
+
+QPushButton[cssClass="btn-check-tor"]:checked {
+    background-color:#507c7d4b;
+    color:#ffffff;
+    border-bottom:2px solid #fbff88;
+}
+
+/* End tor status*/
+
 QPushButton[cssClass="btn-check-status-staking"] {
     background-color:#507c7d4b;
     border-bottom:2px solid #fbff88;
