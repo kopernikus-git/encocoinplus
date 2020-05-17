@@ -17,13 +17,45 @@
 #include <boost/assign/list_of.hpp>
 #include <limits>
 
-
-struct SeedSpec6 {
-    uint8_t addr[16];
-    uint16_t port;
-};
-
 #include "chainparamsseeds.h"
+
+static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+{
+    CMutableTransaction txNew;
+    txNew.nVersion = 1;
+    txNew.vin.resize(1);
+    txNew.vout.resize(1);
+    txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+    txNew.vout[0].nValue = genesisReward;
+    txNew.vout[0].scriptPubKey = genesisOutputScript;
+
+    CBlock genesis;
+    genesis.vtx.push_back(txNew);
+    genesis.hashPrevBlock = 0;
+    genesis.nVersion = nVersion;
+    genesis.nTime    = nTime;
+    genesis.nBits    = nBits;
+    genesis.nNonce   = nNonce;
+    genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
+    return genesis;
+}
+
+/**
+ * Build the genesis block. Note that the output of the genesis coinbase cannot
+ * be spent as it did not originally exist in the database.
+ *
+ * CBlock(hash=00000ffd590b14, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=e0028e, nTime=1390095618, nBits=1e0ffff0, nNonce=28917698, vtx=1)
+ *   CTransaction(hash=e0028e, ver=1, vin.size=1, vout.size=1, nLockTime=0)
+ *     CTxIn(COutPoint(000000, -1), coinbase 04ffff001d01044c5957697265642030392f4a616e2f3230313420546865204772616e64204578706572696d656e7420476f6573204c6976653a204f76657273746f636b2e636f6d204973204e6f7720416363657074696e6720426974636f696e73)
+ *     CTxOut(nValue=50.00000000, scriptPubKey=0xA9037BAC7050C479B121CF)
+ *   vMerkleTree: e0028e
+ */
+static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+{
+    const char* pszTimestamp = "Start of EPG to provide cost-effective and simple solutions to execute various trade finance instruments.";
+    const CScript genesisOutputScript = CScript() << ParseHex("04a930869d88701cbcbf54a5785ee8b5352f72af9c30c7d016128299bcb5177607b620b0c1cc76c486d9b5f711391be964dc6db2da1f7539aaa6c3ee65607e8aa5") << OP_CHECKSIG;
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
+}
 
 /**
  * Main network
@@ -148,7 +180,23 @@ public:
     {
         networkID = CBaseChainParams::MAIN;
         strNetworkID = "main";
-        /**
+
+        consensus.BIP65Height = 0; // 82629b7a9978f5c7ea3f70a12db92633a7d2e436711500db28b97efd48b1e527
+        consensus.powLimit   = uint256S("00000ffff0000000000000000000000000000000000000000000000000000000");
+        consensus.posLimitv1 = uint256S("000000ffff000000000000000000000000000000000000000000000000000000");
+        consensus.posLimitv2 = uint256S("00000ffff0000000000000000000000000000000000000000000000000000000");
+        consensus.nCoinbaseMaturity = 100;
+        consensus.nTargetTimespan = 6 * 60;
+        consensus.nTargetSpacing = 2 * 60;
+	consensus.fPowAllowMinDifficultyBlocks = false;
+        consensus.fPowNoRetargeting = false;
+
+        // The best chain should have at least this much work.
+        consensus.nMinimumChainWork = uint256S("0000000000000000000000000000000000000000000000000000000000000000");
+
+        // By default assume that the signatures in ancestors of this block are valid.
+        consensus.defaultAssumeValid = uint256S("0000000000000000000000000000000000000000000000000000000000000000");
+         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 4-byte int at any alignment.
@@ -162,8 +210,13 @@ public:
         bnProofOfWorkLimit = ~uint256(0) >> 20; // EPGC starting difficulty is 1 / 2^12
         bnProofOfStakeLimit = ~uint256(0) >> 24;
         bnProofOfStakeLimit_V2 = ~uint256(0) >> 20; // 60/4 = 15 ==> use 2**4 higher limit
-        nSubsidyHalvingInterval = 210000;
         nMaxReorganizationDepth = 100;
+
+        genesis = CreateGenesisBlock(1576364812, 2470982, 0x1e0ffff0, 1, 250 * COIN);
+        consensus.hashGenesisBlock = genesis.GetHash();
+        assert(consensus.hashGenesisBlock == uint256("0x00000ec95644c720b0d42b9c2206fb75f6e9c14418e5b6b66f3365d189238efb"));
+        assert(genesis.hashMerkleRoot == uint256("0xdfcf7c1de1f1c9a4bf68518daed009bd72735810e239aa8aa5bf937739c4fe71"));
+
         nEnforceBlockUpgradeMajority = 8100; // 75%
         nRejectBlockOutdatedMajority = 10260; // 95%
         nToCheckBlockUpgradeMajority = 10800; // Approximate expected amount of blocks in 7 days (1440*7.5)
@@ -172,13 +225,11 @@ public:
         nTargetTimespan = 6 * 60;                      // 6 minutes
         nTimeSlotLength = 15;                           // 15 seconds
         nTargetTimespan_V2 = 2 * nTimeSlotLength * 60;  // 30 minutes
-        nMaturity = 100;
         nStakeMinAge = 60 * 60;                         // 1 hour
         nStakeMinDepth = 200;
         nFutureTimeDriftPoW = 7200;
         nFutureTimeDriftPoS = 180;
         nMasternodeCountDrift = 20;
-        /**nMaxMoneyOut = 40000000 * COIN; moved to amount.h Line 30 **/
         nMinColdStakingAmount = 1 * COIN;
 
         nMasternodeCollateral = 200;
@@ -203,7 +254,6 @@ public:
         nEnforceNewSporkKey = 1576364812; //!> Sporks signed after Monday, August 26, 2019 11:00:00 PM GMT must use the new spork key
         nRejectOldSporkKey = 1576364812; //!> Fully reject old spork key after Thursday, September 26, 2019 11:00:00 PM GMT
         nBlockStakeModifierlV2 = 15000;
-        nBIP65ActivationHeight = 0;
         // Activation height for TimeProtocolV2, Blocks V7 and newMessageSignatures
         nBlockTimeProtocolV2 = 60000;
 
@@ -220,34 +270,8 @@ public:
         // Fake Serial Attack
         nFakeSerialBlockheightEnd = -1;
         nSupplyBeforeFakeSerial = 0;
-        /**
-         * Build the genesis block. Note that the output of the genesis coinbase cannot
-         * be spent as it did not originally exist in the database.
-         *
-         * CBlock(hash=00000ffd590b14, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=e0028e, nTime=1390095618, nBits=1e0ffff0, nNonce=28917698, vtx=1)
-         *   CTransaction(hash=e0028e, ver=1, vin.size=1, vout.size=1, nLockTime=0)
-         *     CTxIn(COutPoint(000000, -1), coinbase 04ffff001d01044c5957697265642030392f4a616e2f3230313420546865204772616e64204578706572696d656e7420476f6573204c6976653a204f76657273746f636b2e636f6d204973204e6f7720416363657074696e6720426974636f696e73)
-         *     CTxOut(nValue=50.00000000, scriptPubKey=0xA9037BAC7050C479B121CF)
-         *   vMerkleTree: e0028e
-         */
-        const char* pszTimestamp = "Start of EPG to provide cost-effective and simple solutions to execute various trade finance instruments.";
-        CMutableTransaction txNew;
-        txNew.vin.resize(1);
-        txNew.vout.resize(1);
-        txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].nValue = 250 * COIN;
-        txNew.vout[0].scriptPubKey = CScript() << ParseHex("04a930869d88701cbcbf54a5785ee8b5352f72af9c30c7d016128299bcb5177607b620b0c1cc76c486d9b5f711391be964dc6db2da1f7539aaa6c3ee65607e8aa5") << OP_CHECKSIG;
-        genesis.vtx.push_back(txNew);
-        genesis.hashPrevBlock = 0;
-        genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
-        genesis.nVersion = 1;
-        genesis.nTime = 1576364812;
-        genesis.nBits = 0x1e0ffff0;
-        genesis.nNonce = 2470982;
 
-        hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x00000ec95644c720b0d42b9c2206fb75f6e9c14418e5b6b66f3365d189238efb"));
-        assert(genesis.hashMerkleRoot == uint256("0xdfcf7c1de1f1c9a4bf68518daed009bd72735810e239aa8aa5bf937739c4fe71"));
+        // Note that of those with the service bits flag, most only support a subset of possible options
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -347,12 +371,41 @@ public:
     {
         networkID = CBaseChainParams::TESTNET;
         strNetworkID = "test";
+
+        consensus.BIP65Height = 851019;
+        consensus.powLimit   = uint256S("00000ffff0000000000000000000000000000000000000000000000000000000");
+        consensus.posLimitv1 = uint256S("000000ffff000000000000000000000000000000000000000000000000000000");
+        consensus.posLimitv2 = uint256S("00000ffff0000000000000000000000000000000000000000000000000000000");
+        consensus.nCoinbaseMaturity = 15;
+        consensus.nTargetTimespan = 6 * 60;
+        consensus.nTargetSpacing = 2 * 60;
+        consensus.fPowAllowMinDifficultyBlocks = false;
+        consensus.fPowNoRetargeting = false;
+
+        // The best chain should have at least this much work.
+        consensus.nMinimumChainWork = uint256S("0000000000000000000000000000000000000000000000000000000000000000");
+
+        // By default assume that the signatures in ancestors of this block are valid.
+        consensus.defaultAssumeValid = uint256S("0000000000000000000000000000000000000000000000000000000000000000");
+
+        /**
+         * The message start string is designed to be unlikely to occur in normal data.
+         * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
+         * a large 4-byte int at any alignment.
+         */
+
         pchMessageStart[0] = 0x41;
         pchMessageStart[1] = 0x72;
         pchMessageStart[2] = 0x61;
         pchMessageStart[3] = 0xbb;
         vAlertPubKey = ParseHex("04a2ccfd4ef7e1b4533a25456819eaf66023590e5c7032606e45bae29f86e3868a64a21b2c832790c21265e1297cfdbdb8692c9f8dc0ddab0f6e22a668eaede2ad");
         nDefaultPort = 51474;
+
+        genesis = CreateGenesisBlock(1576364811, 3611038, 0x1e0ffff0, 1, 250 * COIN);
+        consensus.hashGenesisBlock = genesis.GetHash();
+        assert(consensus.hashGenesisBlock == uint256("0x000008a90b61e6ef817f4b071a10a6c3afbb2582cbf7d882596a0e19d05b0829"));
+        assert(genesis.hashMerkleRoot == uint256("0xdfcf7c1de1f1c9a4bf68518daed009bd72735810e239aa8aa5bf937739c4fe71"));
+
         nEnforceBlockUpgradeMajority = 4320; // 75%
         nRejectBlockOutdatedMajority = 5472; // 95%
         nToCheckBlockUpgradeMajority = 5760; // 4 days
@@ -360,7 +413,6 @@ public:
         nLastPOWBlock = 200;
         nEpgcBadBlockTime = 1489001494; // Skip nBit validation of Block 259201 per PR #915
         nEpgcBadBlocknBits = 0x1e0a20bd; // Skip nBit validation of Block 201 per PR #915
-        nMaturity = 15;
         nStakeMinDepth = 100;
         nMasternodeCountDrift = 4;
         nModifierUpdateBlock = 51197; //approx Mon, 17 Apr 2017 04:00:00 GMT
@@ -376,7 +428,6 @@ public:
         nEnforceNewSporkKey = 1576364812; //!> Sporks signed after Monday, August 26, 2019 11:00:00 PM GMT must use the new spork key
         nRejectOldSporkKey = 1576364812; //!> Reject old spork key after Thursday, September 26, 2019 11:00:00 PM GMT
         nBlockStakeModifierlV2 = 1214000;
-        nBIP65ActivationHeight = 851019;
         // Activation height for TimeProtocolV2, Blocks V7 and newMessageSignatures
         nBlockTimeProtocolV2 = 100;
 
@@ -393,13 +444,6 @@ public:
         // Fake Serial Attack
         nFakeSerialBlockheightEnd = -1;
         nSupplyBeforeFakeSerial = 0;
-
-        //! Modify the testnet genesis block so the timestamp is valid for a later start.
-        genesis.nTime = 1576364811;
-        genesis.nNonce = 3611038;
-
-        hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x000008a90b61e6ef817f4b071a10a6c3afbb2582cbf7d882596a0e19d05b0829"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -463,6 +507,7 @@ static CTestNetParams testNetParams;
 /**
  * Regression test
  */
+
 class CRegTestParams : public CTestNetParams
 {
 public:
@@ -470,19 +515,45 @@ public:
     {
         networkID = CBaseChainParams::REGTEST;
         strNetworkID = "regtest";
+
+        consensus.BIP65Height = 0; 
+        consensus.powLimit   = uint256S("ffff000000000000000000000000000000000000000000000000000000000000");
+        consensus.posLimitv1 = uint256S("000000ffff000000000000000000000000000000000000000000000000000000");
+        consensus.posLimitv2 = uint256S("00000ffff0000000000000000000000000000000000000000000000000000000");
+        consensus.nCoinbaseMaturity = 100;
+        consensus.nTargetTimespan = 6 * 60;
+        consensus.nTargetSpacing = 2 * 60;
+        consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.fPowNoRetargeting = true;
+
+        // The best chain should have at least this much work.
+        consensus.nMinimumChainWork = uint256S("0000000000000000000000000000000000000000000000000000000000000000");
+
+        // By default assume that the signatures in ancestors of this block are valid.
+        consensus.defaultAssumeValid = uint256S("0000000000000000000000000000000000000000000000000000000000000000");
+
+        /**
+         * The message start string is designed to be unlikely to occur in normal data.
+         * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
+         * a large 4-byte int at any alignment.
+         */
+
         pchMessageStart[0] = 0xa1;
         pchMessageStart[1] = 0xcf;
         pchMessageStart[2] = 0x7e;
         pchMessageStart[3] = 0xac;
         nDefaultPort = 51476;
-        nSubsidyHalvingInterval = 150;
+
+        genesis = CreateGenesisBlock(1454124731, 2635406, 0x1e0ffff0, 1, 250 * COIN);
+        consensus.hashGenesisBlock = genesis.GetHash();
+        assert(consensus.hashGenesisBlock == uint256("0x00000a45c57e2886e13a8b862631810067014b5400d2686a96b7f5486723be2b"));
+        assert(genesis.hashMerkleRoot == uint256("0xdfcf7c1de1f1c9a4bf68518daed009bd72735810e239aa8aa5bf937739c4fe71"));
+
         nEnforceBlockUpgradeMajority = 750;
         nRejectBlockOutdatedMajority = 950;
         nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 1;
-        bnProofOfWorkLimit = ~uint256(0) >> 1;
         nLastPOWBlock = 250;
-        nMaturity = 100;
         nStakeMinAge = 0;
         nStakeMinDepth = 0;
         nMasternodeCountDrift = 4;
@@ -509,14 +580,6 @@ public:
 
         // Fake Serial Attack
         nFakeSerialBlockheightEnd = -1;
-
-        //! Modify the regtest genesis block so the timestamp is valid for a later start.
-        genesis.nTime = 1454124731;
-        genesis.nNonce = 2635406;
-
-        hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x00000a45c57e2886e13a8b862631810067014b5400d2686a96b7f5486723be2b"));
-        //assert(hashGenesisBlock == uint256("0x4f023a2120d9127b21bbad01724fdb79b519f593f2a85b60d3d79160ec5f29df"));
 
         vFixedSeeds.clear(); //! Testnet mode doesn't have any fixed seeds.
         vSeeds.clear();      //! Testnet mode doesn't have any DNS seeds.
