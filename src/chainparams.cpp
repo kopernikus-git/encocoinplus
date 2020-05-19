@@ -136,43 +136,6 @@ libzerocoin::ZerocoinParams* CChainParams::Zerocoin_Params(bool useModulusV1) co
     return &ZCParamsDec;
 }
 
-bool CChainParams::HasStakeMinAgeOrDepth(const int contextHeight, const uint32_t contextTime,
-        const int utxoFromBlockHeight, const uint32_t utxoFromBlockTime) const
-{
-    // before stake modifier V2, the age required was 60 * 60 (1 hour).
-    if (!IsStakeModifierV2(contextHeight))
-        return (utxoFromBlockTime + nStakeMinAge <= contextTime);
-
-
-    bool StakeMinAgOk = (utxoFromBlockTime + nStakeMinAge <= contextTime);
-    
-    if (!StakeMinAgOk)
-        return false;
-    
-    return (contextHeight - utxoFromBlockHeight >= nStakeMinDepth);
-}
-
-int CChainParams::FutureBlockTimeDrift(const int nHeight) const
-{
-    if (IsTimeProtocolV2(nHeight))
-        // PoS (TimeV2): 14 seconds
-        return TimeSlotLength() - 1;
-
-    // PoS (TimeV1): 3 minutes
-    // PoW: 2 hours
-    return (nHeight > LAST_POW_BLOCK()) ? nFutureTimeDriftPoS : nFutureTimeDriftPoW;
-}
-
-bool CChainParams::IsValidBlockTimeStamp(const int64_t nTime, const int nHeight) const
-{
-    // Before time protocol V2, blocks can have arbitrary timestamps
-    if (!IsTimeProtocolV2(nHeight))
-        return true;
-
-    // Time protocol v2 requires time in slots
-    return (nTime % TimeSlotLength()) == 0;
-}
-
 class CMainParams : public CChainParams
 {
 public:
@@ -181,21 +144,27 @@ public:
         networkID = CBaseChainParams::MAIN;
         strNetworkID = "main";
 
-        consensus.BIP65Height = 0; // 82629b7a9978f5c7ea3f70a12db92633a7d2e436711500db28b97efd48b1e527
-        consensus.powLimit   = uint256S("00000ffff0000000000000000000000000000000000000000000000000000000");
-        consensus.posLimitv1 = uint256S("000000ffff000000000000000000000000000000000000000000000000000000");
-        consensus.posLimitv2 = uint256S("00000ffff0000000000000000000000000000000000000000000000000000000");
+        consensus.fPowAllowMinDifficultyBlocks = false;
+        consensus.powLimit   = ~uint256(0) >> 20; // EPGC starting difficulty is 1 / 2^12
+        consensus.posLimitV1 = ~uint256(0) >> 24;
+        consensus.posLimitV2 = ~uint256(0) >> 20; // 60/4 = 15 ==> use 2**4 higher limit
         consensus.nCoinbaseMaturity = 100;
-        consensus.nTargetTimespan = 6 * 60;
-        consensus.nTargetSpacing = 2 * 60;
-	consensus.fPowAllowMinDifficultyBlocks = false;
-        consensus.fPowNoRetargeting = false;
+        consensus.nFutureTimeDriftPoW = 7200;
+        consensus.nFutureTimeDriftPoS = 180;
+        consensus.nMaxMoneyOut = 40000000 * COIN;
+        consensus.nStakeMinAge = 60 * 60;               // 1 hour
+        consensus.nStakeMinDepth = 200;
+        consensus.nTargetTimespan = 6 * 60;				// 6  minutes
+        consensus.nTargetTimespanV2 = 30 * 60;			// 30 minutes
+        consensus.nTargetSpacing = 2 * 60;				// 1  minutes
+        consensus.nTimeSlotLength = 15;					// 15 seconds
 
-        // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0000000000000000000000000000000000000000000000000000000000000000");
+        // height based activations
+        consensus.height_last_PoW = 1000;
+        consensus.height_start_BIP65 = 0; // 82629b7a9978f5c7ea3f70a12db92633a7d2e436711500db28b97efd48b1e527
+        consensus.height_start_StakeModifierV2 = 15000;
+        consensus.height_start_TimeProtoV2 = 60000;
 
-        // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0000000000000000000000000000000000000000000000000000000000000000");
          /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -207,9 +176,6 @@ public:
         pchMessageStart[3] = 0xe9;
         vAlertPubKey = ParseHex("048b322f15140bb99df0de27653b3761190b7f162c875893c1da3138a5b0d5189bbf4f8ecfe7fe7c5374de522006f295da412059138d73e7ec2e526a51530e1292");
         nDefaultPort = 29442;
-        bnProofOfWorkLimit = ~uint256(0) >> 20; // EPGC starting difficulty is 1 / 2^12
-        bnProofOfStakeLimit = ~uint256(0) >> 24;
-        bnProofOfStakeLimit_V2 = ~uint256(0) >> 20; // 60/4 = 15 ==> use 2**4 higher limit
         nMaxReorganizationDepth = 100;
 
         genesis = CreateGenesisBlock(1576364812, 2470982, 0x1e0ffff0, 1, 250 * COIN);
@@ -221,14 +187,6 @@ public:
         nRejectBlockOutdatedMajority = 10260; // 95%
         nToCheckBlockUpgradeMajority = 10800; // Approximate expected amount of blocks in 7 days (1440*7.5)
         nMinerThreads = 0;
-        nTargetSpacing = 2 * 60;                        // 1 minute
-        nTargetTimespan = 6 * 60;                      // 6 minutes
-        nTimeSlotLength = 15;                           // 15 seconds
-        nTargetTimespan_V2 = 2 * nTimeSlotLength * 60;  // 30 minutes
-        nStakeMinAge = 60 * 60;                         // 1 hour
-        nStakeMinDepth = 200;
-        nFutureTimeDriftPoW = 7200;
-        nFutureTimeDriftPoS = 180;
         nMasternodeCountDrift = 20;
         nMinColdStakingAmount = 1 * COIN;
 
@@ -237,7 +195,6 @@ public:
         nStakeInputMinimal = 75 * COIN;
 
         /** Height or Time Based Activations **/
-        nLastPOWBlock = 1000;
         nEpgcBadBlockTime = 1471401614; // Skip nBit validation of Block 259201 per PR #915
         nEpgcBadBlocknBits = 0x1c056dac; // Skip nBit validation of Block 259201 per PR #915
         nModifierUpdateBlock = 0;
@@ -253,19 +210,16 @@ public:
         nBlockDoubleAccumulated = 999999999;
         nEnforceNewSporkKey = 1576364812; //!> Sporks signed after Monday, August 26, 2019 11:00:00 PM GMT must use the new spork key
         nRejectOldSporkKey = 1576364812; //!> Fully reject old spork key after Thursday, September 26, 2019 11:00:00 PM GMT
-        nBlockStakeModifierlV2 = 15000;
-        // Activation height for TimeProtocolV2, Blocks V7 and newMessageSignatures
-        nBlockTimeProtocolV2 = 60000;
 
         // Public coin spend enforcement
         nPublicZCSpends = 0;
 
         // New P2P messages signatures
-        nBlockEnforceNewMessageSignatures = nBlockTimeProtocolV2;
+        nBlockEnforceNewMessageSignatures = consensus.height_start_TimeProtoV2;
 
         // Blocks v7
         nBlockLastAccumulatorCheckpoint = 0;
-        nBlockV7StartHeight = nBlockTimeProtocolV2;
+        nBlockV7StartHeight = consensus.height_start_TimeProtoV2;
 
         // Fake Serial Attack
         nFakeSerialBlockheightEnd = -1;
@@ -291,7 +245,6 @@ public:
         convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
 
         fMiningRequiresPeers = true;
-        fAllowMinDifficultyBlocks = false;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fSkipProofOfWorkCheck = false;
@@ -372,21 +325,26 @@ public:
         networkID = CBaseChainParams::TESTNET;
         strNetworkID = "test";
 
-        consensus.BIP65Height = 851019;
-        consensus.powLimit   = uint256S("00000ffff0000000000000000000000000000000000000000000000000000000");
-        consensus.posLimitv1 = uint256S("000000ffff000000000000000000000000000000000000000000000000000000");
-        consensus.posLimitv2 = uint256S("00000ffff0000000000000000000000000000000000000000000000000000000");
+        consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.powLimit   = ~uint256(0) >> 20; // EPGC starting difficulty is 1 / 2^12
+        consensus.posLimitV1 = ~uint256(0) >> 24;
+        consensus.posLimitV2 = ~uint256(0) >> 20; // 60/4 = 15 ==> use 2**4 higher limit
         consensus.nCoinbaseMaturity = 15;
-        consensus.nTargetTimespan = 6 * 60;
-        consensus.nTargetSpacing = 2 * 60;
-        consensus.fPowAllowMinDifficultyBlocks = false;
-        consensus.fPowNoRetargeting = false;
+        consensus.nFutureTimeDriftPoW = 7200;
+        consensus.nFutureTimeDriftPoS = 180;
+        consensus.nMaxMoneyOut = 43199500 * COIN;
+        consensus.nStakeMinAge = 60 * 60;
+        consensus.nStakeMinDepth = 100;
+        consensus.nTargetTimespan = 6 * 60;				// 6  minutes
+        consensus.nTargetTimespanV2 = 30 * 60;			// 30 minutes
+        consensus.nTargetSpacing = 2 * 60;				// 1  minutes
+        consensus.nTimeSlotLength = 15;					// 15 seconds
 
-        // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0000000000000000000000000000000000000000000000000000000000000000");
-
-        // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0000000000000000000000000000000000000000000000000000000000000000");
+        // height based activations
+        consensus.height_last_PoW = 200;
+        consensus.height_start_BIP65 = 851019;
+        consensus.height_start_StakeModifierV2 = 1214000;
+        consensus.height_start_TimeProtoV2 = 100; // TimeProtocolV2, Blocks V7 and newMessageSignatures
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -410,10 +368,8 @@ public:
         nRejectBlockOutdatedMajority = 5472; // 95%
         nToCheckBlockUpgradeMajority = 5760; // 4 days
         nMinerThreads = 0;
-        nLastPOWBlock = 200;
         nEpgcBadBlockTime = 1489001494; // Skip nBit validation of Block 259201 per PR #915
         nEpgcBadBlocknBits = 0x1e0a20bd; // Skip nBit validation of Block 201 per PR #915
-        nStakeMinDepth = 100;
         nMasternodeCountDrift = 4;
         nModifierUpdateBlock = 51197; //approx Mon, 17 Apr 2017 04:00:00 GMT
         nZerocoinStartHeight = 201576;
@@ -427,19 +383,16 @@ public:
         nBlockZerocoinV2 = 444020; //!> The block that zerocoin v2 becomes active
         nEnforceNewSporkKey = 1576364812; //!> Sporks signed after Monday, August 26, 2019 11:00:00 PM GMT must use the new spork key
         nRejectOldSporkKey = 1576364812; //!> Reject old spork key after Thursday, September 26, 2019 11:00:00 PM GMT
-        nBlockStakeModifierlV2 = 1214000;
-        // Activation height for TimeProtocolV2, Blocks V7 and newMessageSignatures
-        nBlockTimeProtocolV2 = 100;
 
         // Public coin spend enforcement
         nPublicZCSpends = 100;
 
         // New P2P messages signatures
-        nBlockEnforceNewMessageSignatures = nBlockTimeProtocolV2;
+        nBlockEnforceNewMessageSignatures = consensus.height_start_TimeProtoV2;
 
         // Blocks v7
         nBlockLastAccumulatorCheckpoint = nPublicZCSpends - 10;
-        nBlockV7StartHeight = nBlockTimeProtocolV2;
+        nBlockV7StartHeight = consensus.height_start_TimeProtoV2;
 
         // Fake Serial Attack
         nFakeSerialBlockheightEnd = -1;
@@ -462,7 +415,6 @@ public:
         convertSeed6(vFixedSeeds, pnSeed6_test, ARRAYLEN(pnSeed6_test));
 
         fMiningRequiresPeers = true;
-        fAllowMinDifficultyBlocks = true;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fTestnetToBeDeprecatedFieldRPC = true;
@@ -515,22 +467,27 @@ public:
     {
         networkID = CBaseChainParams::REGTEST;
         strNetworkID = "regtest";
-
-        consensus.BIP65Height = 0; 
-        consensus.powLimit   = uint256S("ffff000000000000000000000000000000000000000000000000000000000000");
-        consensus.posLimitv1 = uint256S("000000ffff000000000000000000000000000000000000000000000000000000");
-        consensus.posLimitv2 = uint256S("00000ffff0000000000000000000000000000000000000000000000000000000");
-        consensus.nCoinbaseMaturity = 100;
-        consensus.nTargetTimespan = 6 * 60;
-        consensus.nTargetSpacing = 2 * 60;
+ 
         consensus.fPowAllowMinDifficultyBlocks = true;
-        consensus.fPowNoRetargeting = true;
+        consensus.powLimit   = ~uint256(0) >> 20; // EPGC starting difficulty is 1 / 2^12
+        consensus.posLimitV1 = ~uint256(0) >> 24;
+        consensus.posLimitV2 = ~uint256(0) >> 20; // 60/4 = 15 ==> use 2**4 higher limit
+        consensus.nCoinbaseMaturity = 100;
+        consensus.nFutureTimeDriftPoW = 7200;
+        consensus.nFutureTimeDriftPoS = 180;
+        consensus.nMaxMoneyOut = 43199500 * COIN;
+        consensus.nStakeMinAge = 0;
+        consensus.nStakeMinDepth = 0;
+        consensus.nTargetTimespan = 6 * 60;				// 6  minutes
+        consensus.nTargetTimespanV2 = 30 * 60;			// 30 minutes
+        consensus.nTargetSpacing = 2 * 60;				// 1  minutes
+        consensus.nTimeSlotLength = 15;					// 15 seconds
 
-        // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0000000000000000000000000000000000000000000000000000000000000000");
-
-        // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0000000000000000000000000000000000000000000000000000000000000000");
+        // height based activations
+        consensus.height_last_PoW = 250;
+        consensus.height_start_BIP65 = 851019; // Not defined for regtest. Inherit TestNet value.
+        consensus.height_start_StakeModifierV2 = consensus.height_last_PoW + 1; // start with modifier V2 on regtest
+        consensus.height_start_TimeProtoV2 = 999999999;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -553,9 +510,6 @@ public:
         nRejectBlockOutdatedMajority = 950;
         nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 1;
-        nLastPOWBlock = 250;
-        nStakeMinAge = 0;
-        nStakeMinDepth = 0;
         nMasternodeCountDrift = 4;
         nModifierUpdateBlock = 0;       //approx Mon, 17 Apr 2017 04:00:00 GMT
         nZerocoinStartHeight = 300;
@@ -565,8 +519,6 @@ public:
         nBlockRecalculateAccumulators = 999999999; //Trigger a recalculation of accumulators
         nBlockFirstFraudulent = 999999999; //First block that bad serials emerged
         nBlockLastGoodCheckpoint = 999999999; //Last valid accumulator checkpoint
-        nBlockStakeModifierlV2 = nLastPOWBlock + 1; // start with modifier V2 on regtest
-        nBlockTimeProtocolV2 = 999999999;
 
         // Public coin spend enforcement
         nPublicZCSpends = 350;
@@ -585,7 +537,6 @@ public:
         vSeeds.clear();      //! Testnet mode doesn't have any DNS seeds.
 
         fMiningRequiresPeers = false;
-        fAllowMinDifficultyBlocks = true;
         fDefaultConsistencyChecks = true;
         fRequireStandard = false;
         fSkipProofOfWorkCheck = true;

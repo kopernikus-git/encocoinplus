@@ -15,7 +15,7 @@ void CDevBudget::PrepareBudget() {
 
 bool CDevBudget::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
 {
-    if (nBlockHeight < Params().LAST_POW_BLOCK()) {
+    if (nBlockHeight < Params().GetConsensus().height_last_PoW) {
         return true;
     }
 
