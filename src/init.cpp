@@ -1754,13 +1754,15 @@ bool AppInit2()
         }
         fVerifyingBlocks = false;
 
-        //Inititalize zEPGWallet
-        uiInterface.InitMessage(_("Syncing zEPG wallet..."));
+        if (zwalletMain->GetMasterSeed() != 0) {
+            //Inititalize zEPGWallet
+            uiInterface.InitMessage(_("Syncing zPIV wallet..."));
 
-        //Load zerocoin mint hashes to memory
-        pwalletMain->zepgTracker->Init();
-        zwalletMain->LoadMintPoolFromDB();
-        zwalletMain->SyncWithChain();
+            //Load zerocoin mint hashes to memory
+            pwalletMain->zpivTracker->Init();
+            zwalletMain->LoadMintPoolFromDB();
+            zwalletMain->SyncWithChain();
+        }
     }  // (!fDisableWallet)
 #else  // ENABLE_WALLET
     LogPrintf("No wallet compiled in!\n");
