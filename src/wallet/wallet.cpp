@@ -3817,7 +3817,7 @@ void CWallet::SetNull()
         pStakerStatus = new CStakerStatus();
     }
     // Stake split threshold
-    nStakeSplitThreshold = STAKE_SPLIT_THRESHOLD;
+    nStakeSplitThreshold = DEFAULT_STAKE_SPLIT_THRESHOLD;
 
     //MultiSend
     vMultiSend.clear();
