@@ -37,7 +37,7 @@ bool CheckZerocoinSpend(const CTransaction& tx, bool fVerifySignature, CValidati
     uint256 hashTxOut = txTemp.GetHash();
 
     bool fValidated = false;
-    const Consensus::Params& consensus = Params().GetConsensus();
+    //const Consensus::Params& consensus = Params().GetConsensus();
     std::set<CBigNum> serials;
     CAmount nTotalRedeemed = 0;
     for (const CTxIn& txin : tx.vin) {
@@ -53,7 +53,7 @@ bool CheckZerocoinSpend(const CTransaction& tx, bool fVerifySignature, CValidati
             if(!GetOutput(txin.prevout.hash, txin.prevout.n, state, prevOut)){
                 return state.DoS(100, error("CheckZerocoinSpend(): public zerocoin spend prev output not found, prevTx %s, index %d", txin.prevout.hash.GetHex(), txin.prevout.n));
             }
-            libzerocoin::ZerocoinParams* params = consensus.Zerocoin_Params(false);
+            libzerocoin::ZerocoinParams* params = Params().Zerocoin_Params(false);
             PublicCoinSpend publicSpend(params);
             if (!ZEPGModule::parseCoinSpend(txin, tx, prevOut, publicSpend)){
                 return state.DoS(100, error("CheckZerocoinSpend(): public zerocoin spend parse failed"));
@@ -76,7 +76,7 @@ bool CheckZerocoinSpend(const CTransaction& tx, bool fVerifySignature, CValidati
             return state.DoS(100, error("Zerocoinspend does not use the same txout that was used in the SoK"));
 
         if (isPublicSpend) {
-            libzerocoin::ZerocoinParams* params = consensus.Zerocoin_Params(false);
+            libzerocoin::ZerocoinParams* params = Params().Zerocoin_Params(false);
             PublicCoinSpend ret(params);
             if (!ZEPGModule::validateInput(txin, prevOut, tx, ret)){
                 return state.DoS(100, error("CheckZerocoinSpend(): public zerocoin spend did not verify"));
@@ -175,7 +175,7 @@ bool ContextualCheckZerocoinSpendNoSerialCheck(const CTransaction& tx, const lib
     bool fUseV1Params = spend->getCoinVersion() < libzerocoin::PrivateCoin::PUBKEY_VERSION;
 
     //Reject serial's that are not in the acceptable value range
-    if (!spend->HasValidSerial(consensus.Zerocoin_Params(fUseV1Params)))  {
+    if (!spend->HasValidSerial(Params().Zerocoin_Params(fUseV1Params)))  {
         // Up until this block our chain was not checking serials correctly..
         if (!isBlockBetweenFakeSerialAttackRange(nHeight))
             return error("%s : zEPG spend with serial %s from tx %s is not in valid range\n", __func__,
@@ -219,7 +219,7 @@ void AddWrappedSerialsInflation()
     uiInterface.ShowProgress("", 100);
 }
 
-bool RecalculateEPGSupply(int nHeightStart, bool fSkipZpiv)
+bool RecalculateEPGSupply(int nHeightStart, bool fSkipZepg)
 {
     const Consensus::Params& consensus = Params().GetConsensus();
     const int chainHeight = chainActive.Height();
@@ -274,9 +274,9 @@ bool RecalculateEPGSupply(int nHeightStart, bool fSkipZpiv)
         nSupplyPrev = pindex->nMoneySupply;
 
 
-        // Rewrite zpiv supply too
-        if (!fSkipZpiv && pindex->nHeight >= consensus.height_start_ZC) {
-            UpdateZPIVSupply(block, pindex, true);
+        // Rewrite zepg supply too
+        if (!fSkipZepg && pindex->nHeight >= consensus.height_start_ZC) {
+            UpdateZEPGSupply(block, pindex, true);
         }
 
         // Add fraudulent funds to the supply and remove any recovered funds.
@@ -309,7 +309,7 @@ bool UpdateZEPGSupply(const CBlock& block, CBlockIndex* pindex, bool fJustCheck)
 {
     const Consensus::Params& consensus = Params().GetConsensus();
     if (pindex->nHeight < consensus.height_start_ZC)
-        return true
+        return true;
 
     //Reset the supply to previous block
     pindex->mapZerocoinSupply = pindex->pprev->mapZerocoinSupply;
@@ -343,7 +343,7 @@ bool UpdateZEPGSupply(const CBlock& block, CBlockIndex* pindex, bool fJustCheck)
         }
     }
 
-    //Remove spends from zPIV supply
+    //Remove spends from zEPG supply
     std::list<libzerocoin::CoinDenomination> listDenomsSpent = ZerocoinSpendListFromBlock(block, true);
     for (const auto& denom : listDenomsSpent) {
         pindex->mapZerocoinSupply.at(denom)--;
