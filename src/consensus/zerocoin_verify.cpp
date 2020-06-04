@@ -37,6 +37,7 @@ bool CheckZerocoinSpend(const CTransaction& tx, bool fVerifySignature, CValidati
     uint256 hashTxOut = txTemp.GetHash();
 
     bool fValidated = false;
+    const Consensus::Params& consensus = Params().GetConsensus();
     std::set<CBigNum> serials;
     CAmount nTotalRedeemed = 0;
     for (const CTxIn& txin : tx.vin) {
@@ -52,7 +53,7 @@ bool CheckZerocoinSpend(const CTransaction& tx, bool fVerifySignature, CValidati
             if(!GetOutput(txin.prevout.hash, txin.prevout.n, state, prevOut)){
                 return state.DoS(100, error("CheckZerocoinSpend(): public zerocoin spend prev output not found, prevTx %s, index %d", txin.prevout.hash.GetHex(), txin.prevout.n));
             }
-            libzerocoin::ZerocoinParams* params = Params().Zerocoin_Params(false);
+            libzerocoin::ZerocoinParams* params = consensus.Zerocoin_Params(false);
             PublicCoinSpend publicSpend(params);
             if (!ZEPGModule::parseCoinSpend(txin, tx, prevOut, publicSpend)){
                 return state.DoS(100, error("CheckZerocoinSpend(): public zerocoin spend parse failed"));
@@ -75,7 +76,7 @@ bool CheckZerocoinSpend(const CTransaction& tx, bool fVerifySignature, CValidati
             return state.DoS(100, error("Zerocoinspend does not use the same txout that was used in the SoK"));
 
         if (isPublicSpend) {
-            libzerocoin::ZerocoinParams* params = Params().Zerocoin_Params(false);
+            libzerocoin::ZerocoinParams* params = consensus.Zerocoin_Params(false);
             PublicCoinSpend ret(params);
             if (!ZEPGModule::validateInput(txin, prevOut, tx, ret)){
                 return state.DoS(100, error("CheckZerocoinSpend(): public zerocoin spend did not verify"));
@@ -148,8 +149,9 @@ bool ContextualCheckZerocoinSpend(const CTransaction& tx, const libzerocoin::Coi
 
 bool ContextualCheckZerocoinSpendNoSerialCheck(const CTransaction& tx, const libzerocoin::CoinSpend* spend, int nHeight, const uint256& hashBlock)
 {
+    const Consensus::Params& consensus = Params().GetConsensus();
     //Check to see if the zEPG is properly signed
-    if (nHeight >= Params().GetConsensus().height_start_ZC_SerialsV2) {
+    if (nHeight >= consensus.height_start_ZC_SerialsV2) {
         try {
             if (!spend->HasValidSignature())
                 return error("%s: V2 zEPG spend does not have a valid signature\n", __func__);
@@ -173,7 +175,7 @@ bool ContextualCheckZerocoinSpendNoSerialCheck(const CTransaction& tx, const lib
     bool fUseV1Params = spend->getCoinVersion() < libzerocoin::PrivateCoin::PUBKEY_VERSION;
 
     //Reject serial's that are not in the acceptable value range
-    if (!spend->HasValidSerial(Params().Zerocoin_Params(fUseV1Params)))  {
+    if (!spend->HasValidSerial(consensus.Zerocoin_Params(fUseV1Params)))  {
         // Up until this block our chain was not checking serials correctly..
         if (!isBlockBetweenFakeSerialAttackRange(nHeight))
             return error("%s : zEPG spend with serial %s from tx %s is not in valid range\n", __func__,
@@ -217,15 +219,16 @@ void AddWrappedSerialsInflation()
     uiInterface.ShowProgress("", 100);
 }
 
-bool RecalculateEPGSupply(int nHeightStart)
+bool RecalculateEPGSupply(int nHeightStart, bool fSkipZpiv)
 {
+    const Consensus::Params& consensus = Params().GetConsensus();
     const int chainHeight = chainActive.Height();
     if (nHeightStart > chainHeight)
         return false;
 
     CBlockIndex* pindex = chainActive[nHeightStart];
     CAmount nSupplyPrev = pindex->pprev->nMoneySupply;
-    if (nHeightStart == Params().GetConsensus().height_start_ZC)
+    if (nHeightStart == consensus.height_start_ZC)
         nSupplyPrev = CAmount(5449796547496199);
 
     uiInterface.ShowProgress(_("Recalculating EPG supply..."), 0);
@@ -270,8 +273,14 @@ bool RecalculateEPGSupply(int nHeightStart)
         pindex->nMoneySupply = nSupplyPrev + nValueOut - nValueIn;
         nSupplyPrev = pindex->nMoneySupply;
 
+
+        // Rewrite zpiv supply too
+        if (!fSkipZpiv && pindex->nHeight >= consensus.height_start_ZC) {
+            UpdateZPIVSupply(block, pindex, true);
+        }
+
         // Add fraudulent funds to the supply and remove any recovered funds.
-        /*if (pindex->nHeight == Params().GetConsensus().height_ZC_RecalcAccumulators) {
+        /*if (pindex->nHeight == consensus.height_ZC_RecalcAccumulators) {
             LogPrintf("%s : Original money supply=%s\n", __func__, FormatMoney(pindex->nMoneySupply));
 
             pindex->nMoneySupply += Params().InvalidAmountFiltered();
@@ -284,6 +293,9 @@ bool RecalculateEPGSupply(int nHeightStart)
 
         assert(pblocktree->WriteBlockIndex(CDiskBlockIndex(pindex)));
 
+        // Stop if shutdown was requested
+        if (ShutdownRequested()) return false;
+        
         if (pindex->nHeight < chainHeight)
             pindex = chainActive.Next(pindex);
         else
@@ -295,31 +307,24 @@ bool RecalculateEPGSupply(int nHeightStart)
 
 bool UpdateZEPGSupply(const CBlock& block, CBlockIndex* pindex, bool fJustCheck)
 {
-    std::list<CZerocoinMint> listMints;
-    bool fFilterInvalid = pindex->nHeight >= Params().GetConsensus().height_ZC_RecalcAccumulators;
-    BlockToZerocoinMintList(block, listMints, fFilterInvalid);
-    std::list<libzerocoin::CoinDenomination> listSpends = ZerocoinSpendListFromBlock(block, fFilterInvalid);
+    const Consensus::Params& consensus = Params().GetConsensus();
+    if (pindex->nHeight < consensus.height_start_ZC)
+        return true
 
-    // Initialize zerocoin supply to the supply from previous block
-    if (pindex->pprev && pindex->pprev->GetBlockHeader().nVersion > 3) {
-        for (auto& denom : libzerocoin::zerocoinDenomList) {
-            pindex->mapZerocoinSupply.at(denom) = pindex->pprev->GetZcMints(denom);
-        }
-    }
+    //Reset the supply to previous block
+    pindex->mapZerocoinSupply = pindex->pprev->mapZerocoinSupply;
 
-    // Track zerocoin money supply
-    CAmount nAmountZerocoinSpent = 0;
-    if (pindex->pprev) {
+    //Add mints to zEPG supply (mints are forever disabled after last checkpoint)
+    if (pindex->nHeight < consensus.height_last_ZC_AccumCheckpoint) {
+        std::list<CZerocoinMint> listMints;
         std::set<uint256> setAddedToWallet;
-        for (auto& m : listMints) {
-            libzerocoin::CoinDenomination denom = m.GetDenomination();
-            pindex->mapZerocoinSupply.at(denom)++;
-
+        BlockToZerocoinMintList(block, listMints, true);
+        for (const auto& m : listMints) {
+            pindex->mapZerocoinSupply.at(m.GetDenomination())++;
             //Remove any of our own mints from the mintpool
             if (!fJustCheck && pwalletMain) {
                 if (pwalletMain->IsMyMint(m.GetValue())) {
                     pwalletMain->UpdateMint(m.GetValue(), pindex->nHeight, m.GetTxHash(), m.GetDenomination());
-
                     // Add the transaction to the wallet
                     for (auto& tx : block.vtx) {
                         uint256 txid = tx.GetHash();
@@ -336,28 +341,28 @@ bool UpdateZEPGSupply(const CBlock& block, CBlockIndex* pindex, bool fJustCheck)
                 }
             }
         }
-
-        for (auto& denom : listSpends) {
-            pindex->mapZerocoinSupply.at(denom)--;
-            nAmountZerocoinSpent += libzerocoin::ZerocoinDenominationToAmount(denom);
-
-            // zerocoin failsafe
-            if (pindex->GetZcMints(denom) < 0)
-                return error("Block contains zerocoins that spend more than are in the available supply to spend");
-        }
     }
 
-    for (auto& denom : libzerocoin::zerocoinDenomList)
-        LogPrint("zero", "%s coins for denomination %d pubcoin %s\n", __func__, denom, pindex->mapZerocoinSupply.at(denom));
+    //Remove spends from zPIV supply
+    std::list<libzerocoin::CoinDenomination> listDenomsSpent = ZerocoinSpendListFromBlock(block, true);
+    for (const auto& denom : listDenomsSpent) {
+        pindex->mapZerocoinSupply.at(denom)--;
+        // zerocoin failsafe
+        if (pindex->mapZerocoinSupply.at(denom) < 0)
+            return error("Block contains zerocoins that spend more than are in the available supply to spend");
+    }
 
     // Update Wrapped Serials amount
     // A one-time event where only the zEPG supply was off (due to serial duplication off-chain on main net)
-    /*if (Params().NetworkID() == CBaseChainParams::MAIN && pindex->nHeight == Params().GetConsensus().height_last_ZC_WrappedSerials) + 1
+    /*    if (Params().NetworkID() == CBaseChainParams::MAIN && pindex->nHeight == consensus.height_last_ZC_WrappedSerials + 1
             && pindex->GetZerocoinSupply() < Params().GetSupplyBeforeFakeSerial() + GetWrapppedSerialInflationAmount()) {
-        for (auto denom : libzerocoin::zerocoinDenomList) {
+        for (const auto& denom : libzerocoin::zerocoinDenomList)
             pindex->mapZerocoinSupply.at(denom) += GetWrapppedSerialInflation(denom);
-        }
     }*/
+
+    for (const auto& denom : libzerocoin::zerocoinDenomList)
+        LogPrint("zero", "%s coins for denomination %d pubcoin %s\n", __func__, denom, pindex->mapZerocoinSupply.at(denom));
+
     return true;
 }
 

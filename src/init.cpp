@@ -1551,7 +1551,7 @@ bool AppInit2()
                 // Recalculate money supply for blocks that are impacted by accounting issue after zerocoin activation
                 if (GetBoolArg("-reindexmoneysupply", false) || reindexZerocoin) {
                     // Recalculate from the zerocoin activation or from scratch.
-                    RecalculateEPGSupply(reindexZerocoin ? consensus.height_start_ZC : 1);
+                    RecalculateEPGSupply((reindexZerocoin ? consensus.height_start_ZC : 1), false);
                 }
 
 */
