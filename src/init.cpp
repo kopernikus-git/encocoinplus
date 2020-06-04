@@ -1487,9 +1487,11 @@ bool AppInit2()
                     break;
                 }
 
+                const Consensus::Params& consensus = Params().GetConsensus();
+                
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
-                if (!mapBlockIndex.empty() && mapBlockIndex.count(Params().GetConsensus().hashGenesisBlock) == 0)
+                if (!mapBlockIndex.empty() && mapBlockIndex.count(consensus.hashGenesisBlock) == 0)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
 
                 // Initialize the block index (no-op if non-empty database was already loaded)
@@ -1510,7 +1512,7 @@ bool AppInit2()
 
                 // Drop all information from the zerocoinDB and repopulate
                 if (GetBoolArg("-reindexzerocoin", false)) {
-                    if (chainActive.Height() > Params().Zerocoin_StartHeight()) {
+                    if (chainActive.Height() > consensus.height_start_ZC) {
                         uiInterface.InitMessage(_("Reindexing zerocoin database..."));
                         std::string strError = ReindexZerocoinDB();
                         if (strError != "") {
@@ -1524,10 +1526,10 @@ bool AppInit2()
                 bool reindexDueWrappedSerials = false;
                 bool reindexZerocoin = false;
                 int chainHeight = chainActive.Height();
-                if(Params().NetworkID() == CBaseChainParams::MAIN && chainHeight > Params().Zerocoin_Block_EndFakeSerial()) {
+                if(Params().NetworkID() == CBaseChainParams::MAIN && chainHeight > consensus.height_last_ZC_WrappedSerials) {
 
                     // Supply needs to be exactly GetSupplyBeforeFakeSerial + GetWrapppedSerialInflationAmount
-                    CBlockIndex* pblockindex = chainActive[Params().Zerocoin_Block_EndFakeSerial() + 1];
+                    CBlockIndex* pblockindex = chainActive[consensus.height_last_ZC_WrappedSerials + 1];
                     CAmount zepgSupplyCheckpoint = Params().GetSupplyBeforeFakeSerial() + GetWrapppedSerialInflationAmount();
 
                     if (pblockindex->GetZerocoinSupply() < zepgSupplyCheckpoint) {
@@ -1549,7 +1551,7 @@ bool AppInit2()
                 // Recalculate money supply for blocks that are impacted by accounting issue after zerocoin activation
                 if (GetBoolArg("-reindexmoneysupply", false) || reindexZerocoin) {
                     // Recalculate from the zerocoin activation or from scratch.
-                    RecalculateEPGSupply(reindexZerocoin ? Params().Zerocoin_StartHeight() : 1);
+                    RecalculateEPGSupply(reindexZerocoin ? consensus.height_start_ZC : 1);
                 }
 
 */
