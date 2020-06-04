@@ -131,7 +131,7 @@ extern const std::string strMessageMagic;
 extern int64_t nTimeBestReceived;
 
 // Best block section
-extern CWaitableCriticalSection g_best_block_mutex;
+extern Mutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;
 
@@ -282,26 +282,10 @@ bool CheckInputs(const CTransaction& tx, CValidationState& state, const CCoinsVi
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CValidationState& state, CCoinsViewCache& inputs, CTxUndo& txundo, int nHeight);
 
-/** Context-independent validity checks */
-bool CheckZerocoinSpend(const CTransaction& tx, bool fVerifySignature, CValidationState& state, bool fFakeSerialAttack = false);
-bool ContextualCheckZerocoinSpend(const CTransaction& tx, const libzerocoin::CoinSpend* spend, int nHeight, const uint256& hashBlock);
-bool ContextualCheckZerocoinSpendNoSerialCheck(const CTransaction& tx, const libzerocoin::CoinSpend* spend, int nHeight, const uint256& hashBlock);
 bool IsTransactionInChain(const uint256& txId, int& nHeightTx, CTransaction& tx);
 bool IsTransactionInChain(const uint256& txId, int& nHeightTx);
 bool IsBlockHashInChain(const uint256& hashBlock);
 bool ValidOutPoint(const COutPoint& out, int nHeight);
-void AddWrappedSerialsInflation();
-void RecalculateZEPGSpent();
-void RecalculateZEPGMinted();
-bool RecalculateEPGSupply(int nHeightStart);
-
-// Fake Serial attack Range
-bool isBlockBetweenFakeSerialAttackRange(int nHeight);
-
-// Public coin spend
-bool CheckPublicCoinSpendEnforced(int blockHeight, bool isPublicSpend);
-int CurrentPublicCoinSpendVersion();
-bool CheckPublicCoinSpendVersion(int version);
 
 /**
  * Check if transaction will be final in the next block to be created.

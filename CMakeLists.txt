@@ -451,6 +451,7 @@ set(COMMON_SOURCES
         ./src/compressor.cpp
         ./src/consensus/merkle.cpp
         ./src/consensus/tx_verify.cpp
+        ./src/consensus/zerocoin_verify.cpp
         ./src/primitives/block.cpp
         ./src/zepg/deterministicmint.cpp
         ./src/primitives/transaction.cpp
@@ -493,6 +494,7 @@ set(UTIL_SOURCES
         ./src/rpc/protocol.cpp
         ./src/sync.cpp
         ./src/uint256.cpp
+        ./src/util/threadnames.cpp
         ./src/util.cpp
         ./src/utilstrencodings.cpp
         ./src/utilmoneystr.cpp

@@ -19,6 +19,7 @@
 #include "amount.h"
 #include "checkpoints.h"
 #include "compat/sanity.h"
+#include "consensus/zerocoin_verify.h"
 #include "httpserver.h"
 #include "httprpc.h"
 #include "invalid.h"
@@ -41,6 +42,7 @@
 #include "guiinterface.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "util/threadnames.h"
 #include "validationinterface.h"
 #include "zepgchain.h"
 
@@ -195,7 +197,7 @@ void PrepareShutdown()
     /// for example if the data directory was found to be locked.
     /// Be sure that anything that writes files or flushes caches only does this if the respective
     /// module was initialized.
-    RenameThread("epgc-shutoff");
+    util::ThreadRename("epgc-shutoff");
     mempool.AddTransactionsUpdated(1);
     StopHTTPRPC();
     StopREST();
@@ -636,7 +638,7 @@ static void BlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex
 
 static bool fHaveGenesis = false;
 static std::mutex cs_GenesisWait;
-static CConditionVariable condvar_GenesisWait;
+static std::condition_variable condvar_GenesisWait;
 
 static void BlockNotifyGenesisWait(bool, const CBlockIndex *pBlockIndex)
 {
@@ -677,7 +679,7 @@ struct CImportingNow {
 
 void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 {
-    RenameThread("epgc-loadblk");
+    util::ThreadRename("epgc-loadblk");
 
     // -reindex
     if (fReindex) {
@@ -1546,10 +1548,6 @@ bool AppInit2()
 
                 // Recalculate money supply for blocks that are impacted by accounting issue after zerocoin activation
                 if (GetBoolArg("-reindexmoneysupply", false) || reindexZerocoin) {
-                    if (chainHeight > Params().Zerocoin_StartHeight()) {
-                        RecalculateZEPGMinted();
-                        RecalculateZEPGSpent();
-                    }
                     // Recalculate from the zerocoin activation or from scratch.
                     RecalculateEPGSupply(reindexZerocoin ? Params().Zerocoin_StartHeight() : 1);
                 }
