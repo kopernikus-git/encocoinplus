@@ -121,7 +121,7 @@ struct BlockHasher {
 };
 
 extern CScript COINBASE_FLAGS;
-extern CCriticalSection cs_main;
+extern RecursiveMutex cs_main;
 extern CTxMemPool mempool;
 typedef boost::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 extern BlockMap mapBlockIndex;
@@ -149,8 +149,6 @@ extern bool fVerifyingBlocks;
 
 extern bool fLargeWorkForkFound;
 extern bool fLargeWorkInvalidChainFound;
-
-extern int64_t nReserveBalance;
 
 extern std::map<uint256, int64_t> mapRejectedBlocks;
 

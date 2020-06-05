@@ -130,7 +130,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
     if (Params().IsRegTestNet()) {
-        if (nHeight < Params().Zerocoin_StartHeight()) pblock->nVersion = 3;
+        if (nHeight < Params().GetConsensus().height_start_ZC) pblock->nVersion = 3;
         pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
     }
 
@@ -521,7 +521,7 @@ bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 
     // Found a solution
     {
-        WaitableLock lock(g_best_block_mutex);
+        WAIT_LOCK(g_best_block_mutex, lock);
         if (pblock->hashPrevBlock != g_best_block)
             return error("EPGCMiner : generated block is stale");
     }
@@ -684,7 +684,7 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
             } else
                 nHashCounter += nHashesDone;
             if (GetTimeMillis() - nHPSTimerStart > 4000) {
-                static CCriticalSection cs;
+                static RecursiveMutex cs;
                 {
                     LOCK(cs);
                     if (GetTimeMillis() - nHPSTimerStart > 4000) {

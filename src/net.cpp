@@ -73,7 +73,7 @@ struct ListenSocket {
 bool fDiscover = true;
 bool fListen = true;
 uint64_t nLocalServices = NODE_NETWORK;
-CCriticalSection cs_mapLocalHost;
+RecursiveMutex cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost;
 static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
@@ -85,23 +85,23 @@ bool fAddressesInitialized = false;
 std::string strSubVersion;
 
 std::vector<CNode*> vNodes;
-CCriticalSection cs_vNodes;
+RecursiveMutex cs_vNodes;
 std::map<CInv, CDataStream> mapRelay;
 std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
-CCriticalSection cs_mapRelay;
+RecursiveMutex cs_mapRelay;
 limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
 
 static std::deque<std::string> vOneShots;
-CCriticalSection cs_vOneShots;
+RecursiveMutex cs_vOneShots;
 
 std::set<CNetAddr> setservAddNodeAddresses;
-CCriticalSection cs_setservAddNodeAddresses;
+RecursiveMutex cs_setservAddNodeAddresses;
 
 std::vector<std::string> vAddedNodes;
-CCriticalSection cs_vAddedNodes;
+RecursiveMutex cs_vAddedNodes;
 
 NodeId nLastNodeId = 0;
-CCriticalSection cs_nLastNodeId;
+RecursiveMutex cs_nLastNodeId;
 
 static CSemaphore* semOutbound = NULL;
 boost::condition_variable messageHandlerCondition;
@@ -338,8 +338,8 @@ void AddressCurrentlyConnected(const CService& addr)
 
 uint64_t CNode::nTotalBytesRecv = 0;
 uint64_t CNode::nTotalBytesSent = 0;
-CCriticalSection CNode::cs_totalBytesRecv;
-CCriticalSection CNode::cs_totalBytesSent;
+RecursiveMutex CNode::cs_totalBytesRecv;
+RecursiveMutex CNode::cs_totalBytesSent;
 
 CNode* FindNode(const CNetAddr& ip)
 {
@@ -488,7 +488,7 @@ void CNode::PushVersion()
 
 
 banmap_t CNode::setBanned;
-CCriticalSection CNode::cs_setBanned;
+RecursiveMutex CNode::cs_setBanned;
 bool CNode::setBannedIsDirty;
 
 void CNode::ClearBanned()
@@ -647,7 +647,7 @@ void CNode::SetBannedSetDirty(bool dirty)
 
 
 std::vector<CSubNet> CNode::vWhitelistedRange;
-CCriticalSection CNode::cs_vWhitelistedRange;
+RecursiveMutex CNode::cs_vWhitelistedRange;
 
 bool CNode::IsWhitelistedRange(const CNetAddr& addr)
 {
@@ -1283,7 +1283,7 @@ void ThreadDNSAddressSeed()
         } else {
             std::vector<CNetAddr> vIPs;
             std::vector<CAddress> vAdd;
-            if (LookupHost(seed.host.c_str(), vIPs)) {
+            if (LookupHost(seed.host.c_str(), vIPs, 0, true)) {
                 for (CNetAddr& ip : vIPs) {
                     int nOneDay = 24 * 3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()));
@@ -1292,7 +1292,15 @@ void ThreadDNSAddressSeed()
                     found++;
                 }
             }
-            addrman.Add(vAdd, CNetAddr(seed.name, true));
+            // TODO: The seed name resolve may fail, yielding an IP of [::], which results in
+            // addrman assigning the same source to results from different seeds.
+            // This should switch to a hard-coded stable dummy IP for each seed name, so that the
+            // resolve is not required at all.
+            if (!vIPs.empty()) {
+                CService seedSource;
+                Lookup(seed.name.c_str(), seedSource, 0, true);
+                addrman.Add(vAdd, seedSource);
+            }
         }
     }
 
@@ -1687,7 +1695,7 @@ void static Discover(boost::thread_group& threadGroup)
     char pszHostName[256] = "";
     if (gethostname(pszHostName, sizeof(pszHostName)) != SOCKET_ERROR) {
         std::vector<CNetAddr> vaddr;
-        if (LookupHost(pszHostName, vaddr)) {
+        if (LookupHost(pszHostName, vaddr, 0, true)) {
             for (const CNetAddr& addr : vaddr) {
                 if (AddLocal(addr, LOCAL_IF))
                     LogPrintf("%s: %s - %s\n", __func__, pszHostName, addr.ToString());

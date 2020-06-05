@@ -21,7 +21,7 @@ bool CheckPublicCoinSpendVersion(int version);
 bool ContextualCheckZerocoinSpend(const CTransaction& tx, const libzerocoin::CoinSpend* spend, int nHeight, const uint256& hashBlock);
 bool ContextualCheckZerocoinSpendNoSerialCheck(const CTransaction& tx, const libzerocoin::CoinSpend* spend, int nHeight, const uint256& hashBlock);
 void AddWrappedSerialsInflation();
-bool RecalculateEPGSupply(int nHeightStart);
+bool RecalculateEPGSupply(int nHeightStart, bool fSkipZpiv = true);
 bool UpdateZEPGSupply(const CBlock& block, CBlockIndex* pindex, bool fJustCheck);
 CAmount GetInvalidUTXOValue();
 

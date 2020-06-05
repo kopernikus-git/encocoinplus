@@ -20,9 +20,9 @@
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments masternodePayments;
 
-CCriticalSection cs_vecPayments;
-CCriticalSection cs_mapMasternodeBlocks;
-CCriticalSection cs_mapMasternodePayeeVotes;
+RecursiveMutex cs_vecPayments;
+RecursiveMutex cs_mapMasternodeBlocks;
+RecursiveMutex cs_mapMasternodePayeeVotes;
 
 //
 // CMasternodePaymentDB
@@ -484,7 +484,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         }
 
         // reject old signatures 6000 blocks after hard-fork
-        if (winner.nMessVersion != MessageVersion::MESS_VER_HASH && Params().NewSigsActive(winner.nBlockHeight - 6000)) {
+        if (winner.nMessVersion != MessageVersion::MESS_VER_HASH && Params().GetConsensus().IsMessSigV2(winner.nBlockHeight - 6000)) {
             LogPrintf("%s : nMessVersion=%d not accepted anymore at block %d\n", __func__, winner.nMessVersion, nHeight);
             return;
         }
@@ -783,7 +783,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         return false;
     }
 
-    const bool fNewSigs = Params().NewSigsActive(nBlockHeight - 20);
+    const bool fNewSigs = Params().GetConsensus().IsMessSigV2(nBlockHeight - 20);
 
     LogPrint("masternode","CMasternodePayments::ProcessBlock() - Signing Winner\n");
     if (newWinner.Sign(keyMasternode, pubKeyMasternode, fNewSigs)) {

@@ -188,7 +188,7 @@ void PrepareShutdown()
     fRequestShutdown = true;  // Needed when we shutdown the wallet
     fRestartRequested = true; // Needed when we restart the wallet
     LogPrintf("%s: In progress...\n", __func__);
-    static CCriticalSection cs_Shutdown;
+    static RecursiveMutex cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown)
         return;
@@ -327,7 +327,7 @@ static void registerSignalHandler(int signal, void(*handler)(int))
 
 bool static InitError(const std::string& str)
 {
-    uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_ERROR);
+    uiInterface.ThreadSafeMessageBox(str, "Init Error", CClientUIInterface::MSG_ERROR);
     return false;
 }
 
@@ -920,13 +920,6 @@ bool AppInit2()
             LogPrintf("AppInit2 : parameter interaction: -enableswifttx=false -> setting -nSwiftTXDepth=0\n");
     }
 
-    if (mapArgs.count("-reservebalance")) {
-        if (!ParseMoney(mapArgs["-reservebalance"], nReserveBalance)) {
-            InitError(_("Invalid amount for -reservebalance=<amount>"));
-            return false;
-        }
-    }
-
     // Make sure enough file descriptors are available
     int nBind = std::max((int)mapArgs.count("-bind") + (int)mapArgs.count("-whitebind"), 1);
     nMaxConnections = GetArg("-maxconnections", 125);
@@ -1400,10 +1393,11 @@ bool AppInit2()
 
     if (mapArgs.count("-externalip")) {
         for (std::string strAddr : mapMultiArgs["-externalip"]) {
-            CService addrLocal(strAddr, GetListenPort(), fNameLookup);
-            if (!addrLocal.IsValid())
+            CService addrLocal;
+            if (Lookup(strAddr.c_str(), addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
+                AddLocal(addrLocal,LOCAL_MANUAL);
+            else
                 return InitError(strprintf(_("Cannot resolve -externalip address: '%s'"), strAddr));
-            AddLocal(CService(strAddr, GetListenPort(), fNameLookup), LOCAL_MANUAL);
         }
     }
 
@@ -1487,9 +1481,11 @@ bool AppInit2()
                     break;
                 }
 
+                const Consensus::Params& consensus = Params().GetConsensus();
+                
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
-                if (!mapBlockIndex.empty() && mapBlockIndex.count(Params().GetConsensus().hashGenesisBlock) == 0)
+                if (!mapBlockIndex.empty() && mapBlockIndex.count(consensus.hashGenesisBlock) == 0)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
 
                 // Initialize the block index (no-op if non-empty database was already loaded)
@@ -1510,7 +1506,7 @@ bool AppInit2()
 
                 // Drop all information from the zerocoinDB and repopulate
                 if (GetBoolArg("-reindexzerocoin", false)) {
-                    if (chainActive.Height() > Params().Zerocoin_StartHeight()) {
+                    if (chainActive.Height() > consensus.height_start_ZC) {
                         uiInterface.InitMessage(_("Reindexing zerocoin database..."));
                         std::string strError = ReindexZerocoinDB();
                         if (strError != "") {
@@ -1524,10 +1520,10 @@ bool AppInit2()
                 bool reindexDueWrappedSerials = false;
                 bool reindexZerocoin = false;
                 int chainHeight = chainActive.Height();
-                if(Params().NetworkID() == CBaseChainParams::MAIN && chainHeight > Params().Zerocoin_Block_EndFakeSerial()) {
+                if(Params().NetworkID() == CBaseChainParams::MAIN && chainHeight > consensus.height_last_ZC_WrappedSerials) {
 
                     // Supply needs to be exactly GetSupplyBeforeFakeSerial + GetWrapppedSerialInflationAmount
-                    CBlockIndex* pblockindex = chainActive[Params().Zerocoin_Block_EndFakeSerial() + 1];
+                    CBlockIndex* pblockindex = chainActive[consensus.height_last_ZC_WrappedSerials + 1];
                     CAmount zepgSupplyCheckpoint = Params().GetSupplyBeforeFakeSerial() + GetWrapppedSerialInflationAmount();
 
                     if (pblockindex->GetZerocoinSupply() < zepgSupplyCheckpoint) {
@@ -1549,7 +1545,7 @@ bool AppInit2()
                 // Recalculate money supply for blocks that are impacted by accounting issue after zerocoin activation
                 if (GetBoolArg("-reindexmoneysupply", false) || reindexZerocoin) {
                     // Recalculate from the zerocoin activation or from scratch.
-                    RecalculateEPGSupply(reindexZerocoin ? Params().Zerocoin_StartHeight() : 1);
+                    RecalculateEPGSupply((reindexZerocoin ? consensus.height_start_ZC : 1), false);
                 }
 
 */
@@ -1672,23 +1668,44 @@ bool AppInit2()
                 strErrors << _("Error loading wallet.dat") << "\n";
         }
 
+        int prev_version = pwalletMain->GetVersion();
         if (GetBoolArg("-upgradewallet", fFirstRun)) {
-            int nMaxVersion = GetArg("-upgradewallet", 0);
-            if (nMaxVersion == 0) // the -upgradewallet without argument case
-            {
-                LogPrintf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
-                nMaxVersion = CLIENT_VERSION;
-                pwalletMain->SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
-            } else
-                LogPrintf("Allowing wallet upgrade up to %i\n", nMaxVersion);
-            if (nMaxVersion < pwalletMain->GetVersion())
-                strErrors << _("Cannot downgrade wallet") << "\n";
-            pwalletMain->SetMaxVersion(nMaxVersion);
+
+            if (prev_version <= FEATURE_PRE_EPGC && pwalletMain->IsLocked()) {
+                // Cannot upgrade a locked wallet
+                std::string strProblem = "Cannot upgrade a locked wallet.\n";
+                strErrors << _("Error: ") << strProblem;
+                LogPrintf("%s", strErrors.str());
+                return InitError(strProblem);
+            } else {
+
+                int nMaxVersion = GetArg("-upgradewallet", 0);
+                if (nMaxVersion == 0) // the -upgradewallet without argument case
+                {
+                    LogPrintf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
+                    nMaxVersion = FEATURE_LATEST;
+                    pwalletMain->SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
+                } else
+                    LogPrintf("Allowing wallet upgrade up to %i\n", nMaxVersion);
+                if (nMaxVersion < pwalletMain->GetVersion())
+                    strErrors << _("Cannot downgrade wallet") << "\n";
+                pwalletMain->SetMaxVersion(nMaxVersion);
+            }
+        }
+
+        // Upgrade to HD if explicit upgrade was requested.
+        std::string upgradeError;
+        if (!pwalletMain->Upgrade(upgradeError, prev_version)) {
+            strErrors << upgradeError << "\n";
         }
 
         if (fFirstRun) {
-            // Create new keyUser and set as default key
-            CPubKey newDefaultKey;
+            // Create new HD Wallet
+            LogPrintf("Creating HD Wallet\n");
+            // Ensure this wallet.dat can only be opened by clients supporting HD.
+            pwalletMain->SetMinVersion(FEATURE_LATEST);
+            pwalletMain->SetupSPKM();
+            
             // Top up the keypool
             if (!pwalletMain->TopUpKeyPool()) {
                 // Error generating keys
@@ -1751,13 +1768,15 @@ bool AppInit2()
         }
         fVerifyingBlocks = false;
 
-        //Inititalize zEPGWallet
-        uiInterface.InitMessage(_("Syncing zEPG wallet..."));
+        if (zwalletMain->GetMasterSeed() != 0) {
+            //Inititalize zEPGWallet
+            uiInterface.InitMessage(_("Syncing zPIV wallet..."));
 
-        //Load zerocoin mint hashes to memory
-        pwalletMain->zepgTracker->Init();
-        zwalletMain->LoadMintPoolFromDB();
-        zwalletMain->SyncWithChain();
+            //Load zerocoin mint hashes to memory
+            pwalletMain->zepgTracker->Init();
+            zwalletMain->LoadMintPoolFromDB();
+            zwalletMain->SyncWithChain();
+        }
     }  // (!fDisableWallet)
 #else  // ENABLE_WALLET
     LogPrintf("No wallet compiled in!\n");
@@ -1956,9 +1975,14 @@ bool AppInit2()
     LogPrintf("mapBlockIndex.size() = %u\n", mapBlockIndex.size());
     LogPrintf("chainActive.Height() = %d\n", chainActive.Height());
 #ifdef ENABLE_WALLET
-    LogPrintf("setKeyPool.size() = %u\n", pwalletMain ? pwalletMain->setKeyPool.size() : 0);
-    LogPrintf("mapWallet.size() = %u\n", pwalletMain ? pwalletMain->mapWallet.size() : 0);
-    LogPrintf("mapAddressBook.size() = %u\n", pwalletMain ? pwalletMain->mapAddressBook.size() : 0);
+    {
+        if (pwalletMain) {
+            LOCK(pwalletMain->cs_wallet);
+            LogPrintf("setKeyPool.size() = %u\n", pwalletMain ? pwalletMain->GetKeyPoolSize() : 0);
+            LogPrintf("mapWallet.size() = %u\n", pwalletMain ? pwalletMain->mapWallet.size() : 0);
+            LogPrintf("mapAddressBook.size() = %u\n", pwalletMain ? pwalletMain->mapAddressBook.size() : 0);
+        }
+    }
 #endif
 
     if (GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
