@@ -101,6 +101,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
         {"signrawtransaction", 2},
         {"sendrawtransaction", 1},
         {"sendrawtransaction", 2},
+        {"sethdseed", 0},
         {"gettxout", 1},
         {"gettxout", 2},
         {"lockunspent", 0},
@@ -129,7 +130,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
         // disabled until removal of the legacy 'masternode' command
         //{"startmasternode", 1},
         {"mnvoteraw", 1},
-        {"mnvoteraw", 4},,
+        {"mnvoteraw", 4},
         {"setstakesplitthreshold", 0},
         {"autocombinerewards", 0},
         {"autocombinerewards", 1},
